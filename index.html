@@ -1,5 +1,633 @@
-<!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><title>BuildQuant</title></head>
-<body>Placeholder</body>
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BuildQuant — Construction Material Estimator</title>
+<meta name="description" content="BuildQuant estimates construction materials in seconds: concrete, rebar, bricks, paint, tiles, aggregates and lumber. Combine everything into one project material list.">
+<meta name="keywords" content="concrete calculator, rebar estimator, brick calculator, construction material estimator, building materials calculator">
+<meta property="og:title" content="BuildQuant — Construction Material Estimator">
+<meta property="og:description" content="Estimate concrete, rebar, bricks, paint, tiles and more. Free for builders.">
+<meta property="og:type" content="website">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23166b4d'/%3E%3Cpath d='M9 22V14l7-5 7 5v8' stroke='white' stroke-width='2.6' fill='none'/%3E%3Cpath d='M13 22v-5h6v5' stroke='white' stroke-width='2.2' fill='none'/%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#eef1ee; --card:#ffffff; --ink:#1a2420; --muted:#5f6f65; --line:#d9e0d9;
+  --brand:#166b4d; --brand-d:#0f5139; --accent:#d97706; --accent-d:#b45309;
+  --ok:#18794e; --warn:#9a6b1a; --bad:#c23b2e; --navy:#14352a;
+  --r:8px; --sh:0 1px 2px rgba(20,40,30,.06),0 4px 14px rgba(20,40,30,.06);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--ink);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+a{color:var(--brand)}
+h1,h2,h3{line-height:1.2;letter-spacing:-.01em}
+.muted{color:var(--muted)} .small{font-size:13px}
+.topbar{position:sticky;top:0;z-index:60;background:#fff;border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:18px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink);font-weight:800;letter-spacing:.12em;font-size:17px;cursor:pointer}
+.brand svg{width:30px;height:30px}
+.mainnav{display:flex;gap:2px;margin-left:8px;flex:1}
+.mainnav button{background:none;border:0;color:var(--muted);font-size:14.5px;font-weight:600;padding:9px 12px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.mainnav button:hover{color:var(--ink);background:#f0f4f0}
+.mainnav button.active{color:var(--brand);background:#e4f0e9}
+.bar-cta{display:flex;align-items:center;gap:10px}
+select,input,textarea{font:inherit;color:var(--ink)}
+#langSel{border:1px solid var(--line);border-radius:6px;padding:7px 9px;background:#fff;font-size:13.5px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:7px;padding:11px 20px;font-size:14.5px;font-weight:700;cursor:pointer;text-decoration:none;transition:background .15s}
+.btn-primary{background:var(--brand);color:#fff}.btn-primary:hover{background:var(--brand-d)}
+.btn-accent{background:var(--accent);color:#fff}.btn-accent:hover{background:var(--accent-d)}
+.btn-ghost{background:#fff;color:var(--brand);border:1px solid var(--line)}.btn-ghost:hover{border-color:var(--brand)}
+.btn-dark{background:var(--navy);color:#fff}.btn-dark:hover{background:#1d4a3a}
+.btn-sm{padding:7px 13px;font-size:13px}
+.hero{background:linear-gradient(120deg,#14352a 0%,#1a4a38 60%,#166b4d 100%);color:#fff;padding:72px 0 64px}
+.hero .kicker{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:12.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:20px;margin-bottom:20px}
+.hero h1{font-size:44px;max-width:660px;margin-bottom:16px}
+.hero p.sub{font-size:18px;color:#cfe0d4;max-width:620px;margin-bottom:30px}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap}
+.hero-stats{display:flex;gap:36px;margin-top:44px;flex-wrap:wrap}
+.hero-stats .st .n{font-size:26px;font-weight:800}
+.hero-stats .st .l{font-size:13px;color:#a9c2b2}
+.section{padding:64px 0}
+.sec-head{max-width:680px;margin-bottom:36px}
+.sec-head .eyebrow{color:var(--accent);font-weight:800;font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.sec-head h2{font-size:32px;margin-bottom:12px}
+.sec-head p{color:var(--muted);font-size:16.5px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:20px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:26px}
+.card h3{font-size:18px;margin-bottom:10px}
+.card p{color:var(--muted);font-size:14.5px}
+.card .ic{width:44px;height:44px;border-radius:10px;background:#e4f0e9;color:var(--brand);display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.card .ic svg{width:24px;height:24px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.step{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:26px;box-shadow:var(--sh)}
+.step .num{width:38px;height:38px;border-radius:50%;background:var(--brand);color:#fff;font-weight:800;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.step h3{margin-bottom:8px;font-size:17px}.step p{color:var(--muted);font-size:14.5px}
+.view{display:none}.view.active{display:block}
+.apphead{background:#fff;border-bottom:1px solid var(--line);padding:26px 0;margin-bottom:26px}
+.apphead h2{font-size:26px}.apphead p{color:var(--muted);margin-top:6px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);padding:24px;margin-bottom:22px}
+.panel h3{font-size:16.5px;margin-bottom:4px}
+.panel .desc{color:var(--muted);font-size:13.5px;margin-bottom:16px}
+table.data{width:100%;border-collapse:collapse;font-size:14px;background:#fff}
+table.data th{background:#f2f5f2;text-align:left;padding:10px 12px;font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:2px solid var(--line);white-space:nowrap}
+table.data td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+table.data tr:last-child td{border-bottom:0}
+table.data tr:nth-child(even) td{background:#fafbfa}
+table.data td.num,table.data th.num{text-align:right;font-variant-numeric:tabular-nums}
+table.data input,table.data select{width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:14px;background:#fff}
+.row-actions{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.formgrid .fg label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px}
+.formgrid .fg input,.formgrid .fg select{width:100%;border:1px solid var(--line);border-radius:6px;padding:9px 11px;font-size:14px;background:#fff}
+.hint{font-size:12.5px;color:var(--muted);margin-top:6px}
+.resultbox{background:#f2f7f3;border:1px solid #cfe3d4;border-radius:var(--r);padding:18px 20px;margin-top:16px;display:none}
+.resultbox.show{display:block}
+.resultbox table{width:100%;border-collapse:collapse;font-size:14.5px}
+.resultbox td{padding:7px 4px;border-bottom:1px dashed #cfe3d4}
+.resultbox td:last-child{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.resultbox tr:last-child td{border-bottom:0}
+.calctabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.calctabs button{border:1px solid var(--line);background:#fff;border-radius:20px;padding:8px 16px;font-size:13.5px;font-weight:700;color:var(--muted);cursor:pointer}
+.calctabs button.active{background:var(--brand);border-color:var(--brand);color:#fff}
+.calc{display:none}.calc.active{display:block}
+footer{background:var(--navy);color:#b9cdc0;padding:48px 0 28px;margin-top:40px}
+footer .fgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:28px;margin-bottom:30px}
+footer h4{color:#fff;font-size:14px;margin-bottom:12px;text-transform:uppercase;letter-spacing:.06em}
+footer a{color:#b9cdc0;text-decoration:none;font-size:14px;display:block;padding:4px 0;cursor:pointer}
+footer a:hover{color:#fff}
+footer .fbrand{color:#fff;font-weight:800;letter-spacing:.12em;font-size:18px;margin-bottom:10px;display:flex;align-items:center;gap:10px}
+footer .copy{border-top:1px solid rgba(255,255,255,.15);padding-top:20px;font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--ink);color:#fff;padding:12px 22px;border-radius:8px;font-size:14px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;z-index:200;max-width:90vw}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.faq{max-width:760px}
+.faq details{background:#fff;border:1px solid var(--line);border-radius:var(--r);margin-bottom:10px}
+.faq summary{padding:16px 20px;font-weight:700;cursor:pointer;font-size:15.5px;list-style:none}
+.faq summary::-webkit-details-marker{display:none}
+.faq details[open] summary{border-bottom:1px solid var(--line)}
+.faq .a{padding:16px 20px;color:var(--muted);font-size:14.5px}
+@media(max-width:900px){.grid3,.steps{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.mainnav{display:none}.hero h1{font-size:32px}footer .fgrid{grid-template-columns:1fr 1fr}}
+@media print{.topbar,.hero,.no-print,footer,#toast{display:none!important}body{background:#fff}.view{display:none!important}.view.active{display:block!important}@page{margin:12mm}}
+</style>
+</head>
+<body>
+<header class="topbar no-print">
+  <div class="wrap bar-in">
+    <a class="brand" data-nav="home"><svg viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#166b4d"/><path d="M9 22V14l7-5 7 5v8" stroke="white" stroke-width="2.6" fill="none"/><path d="M13 22v-5h6v5" stroke="white" stroke-width="2.2" fill="none"/></svg>BUILDQUANT</a>
+    <nav class="mainnav" id="mainnav">
+      <button data-nav="home" data-i18n="navHome">Home</button>
+      <button data-nav="calcs" data-i18n="navCalcs">Calculators</button>
+      <button data-nav="project" data-i18n="navProject">Project</button>
+      <button data-nav="pricing" data-i18n="navPricing">Pricing</button>
+    </nav>
+    <div class="bar-cta">
+      <select id="langSel" aria-label="Language"></select>
+      <button class="btn btn-primary btn-sm" data-nav="calcs" data-i18n="openApp">Open app</button>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- ================= HOME ================= -->
+<section class="view" id="v-home">
+  <div class="hero">
+    <div class="wrap">
+      <span class="kicker" data-i18n="homeBadge">Free for builders</span>
+      <h1 data-i18n="heroTitle">How much material do you really need?</h1>
+      <p class="sub" data-i18n="heroSub">BuildQuant estimates construction materials in seconds — concrete, rebar, bricks, paint, tiles, aggregates and lumber — and combines everything into one project list.</p>
+      <div class="hero-cta no-print">
+        <button class="btn btn-accent" data-nav="calcs" data-i18n="heroStart">Start estimating</button>
+      </div>
+      <div class="hero-stats">
+        <div class="st"><div class="n">7</div><div class="l" data-i18n="statCalcs">material calculators</div></div>
+        <div class="st"><div class="n">100%</div><div class="l" data-i18n="statPrivate">private — data stays in your browser</div></div>
+        <div class="st"><div class="n">0 €</div><div class="l" data-i18n="statFree">to start, no account needed</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow" data-i18n="whoEyebrow">Who it's for</div>
+        <h2 data-i18n="whoTitle">Built for people who build</h2>
+        <p data-i18n="whoSub">From the site engineer to the DIY renovator — accurate material quantities without the spreadsheet headache.</p>
+      </div>
+      <div class="grid3">
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V8l7-5 7 5v13M9 21v-6h6v6"/></svg></div><h3 data-i18n="who1t">Contractors &amp; engineers</h3><p data-i18n="who1b">Quick quantity take-offs for quotes and orders. Project mode merges all calculators into one material list.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l9 5-9 5-9-5zM3 13l9 5 9-5"/></svg></div><h3 data-i18n="who2t">Builders &amp; masons</h3><p data-i18n="who2b">Concrete, mortar, blocks and rebar in seconds — with waste factors included, right on site from your phone.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 12l5 5L20 6"/></svg></div><h3 data-i18n="who3t">Renovators &amp; DIY</h3><p data-i18n="who3b">Paint, tiles and lumber for your renovation — buy the right amount the first time, no costly second trips.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow" data-i18n="featEyebrow">Calculators</div>
+        <h2 data-i18n="featTitle">Seven estimators, one project</h2>
+        <p data-i18n="featSub">Each calculator is engineered with real construction formulas — then feeds your project material list.</p>
+      </div>
+      <div class="grid3">
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10h16v10H4zM4 10l2-6h12l2 6"/></svg></div><h3 data-i18n="f1t">Concrete</h3><p data-i18n="f1b">Slabs, columns and footings. Volume, cement bags, sand, gravel and water from your mix ratio.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg></div><h3 data-i18n="f2t">Rebar</h3><p data-i18n="f2b">Weight per diameter Φ8–Φ40, total tonnage and number of 12 m bars to order.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="8" width="16" height="12"/><path d="M4 12h16M9 8v4M15 12v8"/></svg></div><h3 data-i18n="f3t">Bricks &amp; blocks</h3><p data-i18n="f3b">Wall units plus mortar quantity, with opening deductions and waste factor.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 3h9l4 4v14H6zM15 3v5h4"/></svg></div><h3 data-i18n="f4t">Paint</h3><p data-i18n="f4b">Litres and cans from wall area, coverage and coats — openings deducted.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16"/><path d="M4 12h16M12 4v16"/></svg></div><h3 data-i18n="f5t">Tiles</h3><p data-i18n="f5b">Tile count with cutting waste, adhesive and grout for floors and walls.</p></div>
+        <div class="card"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 8l9-5 9 5-9 5zM3 12l9 5 9-5M3 16l9 5 9-5"/></svg></div><h3 data-i18n="f6t">Aggregates &amp; lumber</h3><p data-i18n="f6b">Sand, gravel and crushed stone by volume-to-weight, plus timber volume in m³.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow" data-i18n="howEyebrow">How it works</div>
+        <h2 data-i18n="howTitle">From dimensions to material list in 3 steps</h2>
+      </div>
+      <div class="steps">
+        <div class="step"><div class="num">1</div><h3 data-i18n="s1t">Enter dimensions</h3><p data-i18n="s1b">Pick a calculator and type lengths, areas or counts. Metric and imperial units supported.</p></div>
+        <div class="step"><div class="num">2</div><h3 data-i18n="s2t">Get quantities</h3><p data-i18n="s2b">Real construction formulas compute materials with waste factors — bags, tonnes, litres, pieces.</p></div>
+        <div class="step"><div class="num">3</div><h3 data-i18n="s3t">Build your project</h3><p data-i18n="s3b">Add each result to your project list, then export one CSV or PDF for ordering.</p></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section" style="background:#fff;border-top:1px solid var(--line)">
+    <div class="wrap">
+      <div class="sec-head">
+        <div class="eyebrow" data-i18n="faqEyebrow">FAQ</div>
+        <h2 data-i18n="faqTitle">Frequently asked questions</h2>
+      </div>
+      <div class="faq">
+        <details><summary data-i18n="q1">Is BuildQuant free?</summary><div class="a" data-i18n="q1a">Yes. All calculators, the project list and exports are free with no account. Your data stays in your browser.</div></details>
+        <details><summary data-i18n="q2">How accurate are the estimates?</summary><div class="a" data-i18n="q2a">Formulas follow standard construction practice (dry volume factor, standard densities, rebar weights). Always add your own contingency for critical orders.</div></details>
+        <details><summary data-i18n="q3">Can I combine calculators?</summary><div class="a" data-i18n="q3a">Yes — every result can be added to your project material list, which you export as one CSV or PDF.</div></details>
+        <details><summary data-i18n="q4">Do I need an account?</summary><div class="a" data-i18n="q4a">No. Everything runs locally in your browser, with session export/import to move between devices.</div></details>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero" style="padding:56px 0">
+    <div class="wrap" style="text-align:center">
+      <h2 data-i18n="ctaTitle" style="margin-bottom:12px">Order exactly what you need.</h2>
+      <p class="sub" data-i18n="ctaSub" style="margin:0 auto 26px">Your first material estimate takes less than a minute.</p>
+      <button class="btn btn-accent" data-nav="calcs" data-i18n="openApp">Open app</button>
+    </div>
+  </div>
+</section>
+<!-- ================= CALCULATORS ================= -->
+<section class="view" id="v-calcs">
+  <div class="apphead"><div class="wrap"><h2 data-i18n="navCalcs">Calculators</h2><p data-i18n="calcsSub">Pick a material, enter dimensions, add the result to your project.</p></div></div>
+  <div class="wrap">
+    <div class="calctabs no-print" id="calcTabs">
+      <button data-calc="concrete" class="active" data-i18n="cConcrete">Concrete</button>
+      <button data-calc="rebar" data-i18n="cRebar">Rebar</button>
+      <button data-calc="wall" data-i18n="cWall">Bricks &amp; blocks</button>
+      <button data-calc="paint" data-i18n="cPaint">Paint</button>
+      <button data-calc="tiles" data-i18n="cTiles">Tiles</button>
+      <button data-calc="agg" data-i18n="cAgg">Aggregates</button>
+      <button data-calc="lumber" data-i18n="cLumber">Lumber</button>
+    </div>
+
+    <div class="calc active" id="c-concrete"><div class="panel">
+      <h3 data-i18n="cConcrete">Concrete</h3><p class="desc" data-i18n="concreteDesc">Slab, column or strip footing — volume, cement, sand, gravel, water.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="shape">Shape</label><select id="ccShape"><option value="slab" data-i18n="shSlab">Slab</option><option value="column" data-i18n="shColumn">Column</option><option value="footing" data-i18n="shFooting">Strip footing</option></select></div>
+        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="ccL" type="number" min="0" step="any" value="5"></div>
+        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="ccW" type="number" min="0" step="any" value="4"></div>
+        <div class="fg"><label data-i18n="dimT">Thickness / height (m)</label><input id="ccT" type="number" min="0" step="any" value="0.2"></div>
+        <div class="fg"><label data-i18n="mixRatio">Mix ratio (cement:sand:gravel)</label><select id="ccMix"><option value="1:2:4">1 : 2 : 4</option><option value="1:2:3">1 : 2 : 3</option><option value="1:3:6">1 : 3 : 6</option></select></div>
+        <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="ccWaste" type="number" min="0" step="1" value="5"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="ccGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="ccAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="ccOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-rebar"><div class="panel">
+      <h3 data-i18n="cRebar">Rebar</h3><p class="desc" data-i18n="rebarDesc">Weight per diameter and 12 m bars to order.</p>
+      <table class="data"><thead><tr><th data-i18n="diaCol">Diameter</th><th data-i18n="totLenM">Total length (m)</th><th></th></tr></thead><tbody id="rbBody"></tbody></table>
+      <div class="row-actions"><button class="btn btn-ghost btn-sm" id="rbAdd" data-i18n="addRow">+ Add row</button><button class="btn btn-primary btn-sm" id="rbGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="rbAddP" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="rbOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-wall"><div class="panel">
+      <h3 data-i18n="cWall">Bricks &amp; blocks</h3><p class="desc" data-i18n="wallDesc">Masonry units and mortar for a wall.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="wallL">Wall length (m)</label><input id="wL" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="wallH">Wall height (m)</label><input id="wH" type="number" min="0" step="any" value="3"></div>
+        <div class="fg"><label data-i18n="unitType">Unit type</label><select id="wType"><option value="block" data-i18n="uBlock">Concrete block 390×190×190</option><option value="brick" data-i18n="uBrick">Brick 250×120×65</option></select></div>
+        <div class="fg"><label data-i18n="openArea">Openings area (m²)</label><input id="wOpen" type="number" min="0" step="any" value="0"></div>
+        <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="wWaste" type="number" min="0" step="1" value="5"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="wGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="wAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="wOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-paint"><div class="panel">
+      <h3 data-i18n="cPaint">Paint</h3><p class="desc" data-i18n="paintDesc">Litres and cans for walls.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="paintArea">Area to paint (m²)</label><input id="pArea" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="coverage">Coverage (m²/litre)</label><input id="pCov" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="coats">Coats</label><input id="pCoats" type="number" min="1" step="1" value="2"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="pGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="pAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="pOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-tiles"><div class="panel">
+      <h3 data-i18n="cTiles">Tiles</h3><p class="desc" data-i18n="tilesDesc">Tiles, adhesive and grout for floors.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="floorL">Floor length (m)</label><input id="tL" type="number" min="0" step="any" value="5"></div>
+        <div class="fg"><label data-i18n="floorW">Floor width (m)</label><input id="tW" type="number" min="0" step="any" value="4"></div>
+        <div class="fg"><label data-i18n="tileSize">Tile size (cm)</label><select id="tSize"><option value="30">30 × 30</option><option value="45">45 × 45</option><option value="60" selected>60 × 60</option><option value="3060">30 × 60</option></select></div>
+        <div class="fg"><label data-i18n="wastePct">Cutting waste (%)</label><input id="tWaste" type="number" min="0" step="1" value="10"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="tGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="tAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="tOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-agg"><div class="panel">
+      <h3 data-i18n="cAgg">Aggregates</h3><p class="desc" data-i18n="aggDesc">Volume to weight for sand, gravel and crushed stone.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="aggType">Material</label><select id="aType"><option value="1.6" data-i18n="aSand">Sand (1.6 t/m³)</option><option value="1.5" data-i18n="aGravel">Gravel (1.5 t/m³)</option><option value="1.55" data-i18n="aCrushed">Crushed stone (1.55 t/m³)</option></select></div>
+        <div class="fg"><label data-i18n="volM3">Volume (m³)</label><input id="aVol" type="number" min="0" step="any" value="5"></div>
+        <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="aWaste" type="number" min="0" step="1" value="5"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="aGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="aAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="aOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-lumber"><div class="panel">
+      <h3 data-i18n="cLumber">Lumber</h3><p class="desc" data-i18n="lumberDesc">Timber volume from piece dimensions.</p>
+      <table class="data"><thead><tr><th data-i18n="thPieces">Pieces</th><th data-i18n="thSection">Section W×H (mm)</th><th data-i18n="thLenM">Length (m)</th><th></th></tr></thead><tbody id="lbBody"></tbody></table>
+      <div class="row-actions"><button class="btn btn-ghost btn-sm" id="lbAdd" data-i18n="addRow">+ Add row</button><button class="btn btn-primary btn-sm" id="lbGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="lbAddP" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="lbOut"></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- ================= PROJECT ================= -->
+<section class="view" id="v-project">
+  <div class="apphead"><div class="wrap"><h2 data-i18n="navProject">Project</h2><p data-i18n="projSub">One material list from all calculators — ready to order.</p></div></div>
+  <div class="wrap">
+    <div class="panel">
+      <h3 data-i18n="projTitle">Project material list</h3>
+      <p class="desc" data-i18n="projDesc">Add results from any calculator, adjust quantities, export once.</p>
+      <div class="formgrid" style="margin-bottom:16px">
+        <div class="fg"><label data-i18n="projNameL">Project name</label><input id="pjName" data-i18n-ph="projNamePh" placeholder="e.g. Villa roof"></div>
+      </div>
+      <table class="data"><thead><tr><th data-i18n="thMaterial">Material</th><th data-i18n="thQty">Quantity</th><th data-i18n="thUnit">Unit</th><th></th></tr></thead><tbody id="pjBody"></tbody></table>
+      <div class="row-actions">
+        <button class="btn btn-ghost btn-sm" id="pjCsv" data-i18n="dlCsv">Download CSV</button>
+        <button class="btn btn-ghost btn-sm" id="pjPdf" data-i18n="pdfBtn">Export PDF</button>
+        <button class="btn btn-ghost btn-sm" id="pjPrint" data-i18n="print">Print</button>
+        <button class="btn btn-ghost btn-sm" id="pjClear" data-i18n="clearList">Clear list</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= PRICING ================= -->
+<section class="view" id="v-pricing">
+  <div class="apphead"><div class="wrap"><h2 data-i18n="navPricing">Pricing</h2><p data-i18n="prSub">Start free. Upgrade when your projects grow.</p></div></div>
+  <div class="wrap">
+    <div class="price-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,420px));gap:22px;justify-content:center">
+      <div class="card" style="position:relative"><h3>Free</h3><div style="font-size:40px;font-weight:800;margin:10px 0 2px">0</div><div class="muted" data-i18n="prForever">forever</div>
+        <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prF1">All 7 calculators</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prF2">Project material list</li><li style="padding:8px 0" data-i18n="prF3">CSV &amp; PDF export</li></ul>
+        <button class="btn btn-ghost" style="width:100%" data-i18n="prChooseFree">You are on Free</button></div>
+      <div class="card" style="position:relative;border:2px solid var(--brand)"><h3>Pro</h3><div style="font-size:40px;font-weight:800;margin:10px 0 2px">—</div><div class="muted" data-i18n="prSoon">coming soon</div>
+        <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prP1">Everything in Free</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prP2">Saved projects with history</li><li style="padding:8px 0" data-i18n="prP3">Branded quote PDFs</li></ul>
+        <button class="btn btn-primary" id="notifyBtn" style="width:100%" data-i18n="prNotify">Notify me</button></div>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="no-print">
+  <div class="wrap">
+    <div class="fgrid">
+      <div><div class="fbrand"><svg viewBox="0 0 32 32" width="26" height="26"><rect width="32" height="32" rx="6" fill="#e4f0e9"/><path d="M9 22V14l7-5 7 5v8" stroke="#166b4d" stroke-width="2.6" fill="none"/><path d="M13 22v-5h6v5" stroke="#166b4d" stroke-width="2.2" fill="none"/></svg>BUILDQUANT</div><p class="small" data-i18n="footerTag">Construction material estimator for builders, contractors and renovators.</p></div>
+      <div><h4 data-i18n="ftProduct">Product</h4><a data-nav="calcs" data-i18n="navCalcs">Calculators</a><a data-nav="project" data-i18n="navProject">Project</a><a data-nav="pricing" data-i18n="navPricing">Pricing</a></div>
+      <div><h4 data-i18n="ftCompany">Company</h4><a data-nav="home" data-i18n="navHome">Home</a></div>
+      <div><h4 data-i18n="ftLegal">Legal</h4><a data-i18n="ftPrivacy">Privacy — data stays in your browser</a></div>
+    </div>
+    <div class="copy"><span>© 2026 BuildQuant. <span data-i18n="rights">All rights reserved.</span></span><span data-i18n="madeFor">Made for people who build.</span></div>
+  </div>
+</footer>
+<div id="toast"></div>
+<script>
+"use strict";
+/* ================= i18n ================= */
+const I18N={en:{
+navHome:"Home",navCalcs:"Calculators",navProject:"Project",navPricing:"Pricing",openApp:"Open app",
+homeBadge:"Free for builders",heroTitle:"How much material do you really need?",heroSub:"BuildQuant estimates construction materials in seconds — concrete, rebar, bricks, paint, tiles, aggregates and lumber — and combines everything into one project list.",heroStart:"Start estimating",
+statCalcs:"material calculators",statPrivate:"private — data stays in your browser",statFree:"to start, no account needed",
+whoEyebrow:"Who it's for",whoTitle:"Built for people who build",whoSub:"From the site engineer to the DIY renovator — accurate material quantities without the spreadsheet headache.",
+who1t:"Contractors & engineers",who1b:"Quick quantity take-offs for quotes and orders. Project mode merges all calculators into one material list.",
+who2t:"Builders & masons",who2b:"Concrete, mortar, blocks and rebar in seconds — with waste factors included, right on site from your phone.",
+who3t:"Renovators & DIY",who3b:"Paint, tiles and lumber for your renovation — buy the right amount the first time, no costly second trips.",
+featEyebrow:"Calculators",featTitle:"Seven estimators, one project",featSub:"Each calculator is engineered with real construction formulas — then feeds your project material list.",
+f1t:"Concrete",f1b:"Slabs, columns and footings. Volume, cement bags, sand, gravel and water from your mix ratio.",
+f2t:"Rebar",f2b:"Weight per diameter Φ8–Φ40, total tonnage and number of 12 m bars to order.",
+f3t:"Bricks & blocks",f3b:"Wall units plus mortar quantity, with opening deductions and waste factor.",
+f4t:"Paint",f4b:"Litres and cans from wall area, coverage and coats — openings deducted.",
+f5t:"Tiles",f5b:"Tile count with cutting waste, adhesive and grout for floors and walls.",
+f6t:"Aggregates & lumber",f6b:"Sand, gravel and crushed stone by volume-to-weight, plus timber volume in m³.",
+howEyebrow:"How it works",howTitle:"From dimensions to material list in 3 steps",
+s1t:"Enter dimensions",s1b:"Pick a calculator and type lengths, areas or counts. Metric and imperial units supported.",
+s2t:"Get quantities",s2b:"Real construction formulas compute materials with waste factors — bags, tonnes, litres, pieces.",
+s3t:"Build your project",s3b:"Add each result to your project list, then export one CSV or PDF for ordering.",
+faqEyebrow:"FAQ",faqTitle:"Frequently asked questions",
+q1:"Is BuildQuant free?",q1a:"Yes. All calculators, the project list and exports are free with no account. Your data stays in your browser.",
+q2:"How accurate are the estimates?",q2a:"Formulas follow standard construction practice (dry volume factor, standard densities, rebar weights). Always add your own contingency for critical orders.",
+q3:"Can I combine calculators?",q3a:"Yes — every result can be added to your project material list, which you export as one CSV or PDF.",
+q4:"Do I need an account?",q4a:"No. Everything runs locally in your browser, with session export/import to move between devices.",
+ctaTitle:"Order exactly what you need.",ctaSub:"Your first material estimate takes less than a minute.",
+footerTag:"Construction material estimator for builders, contractors and renovators.",
+ftProduct:"Product",ftCompany:"Company",ftLegal:"Legal",ftPrivacy:"Privacy — data stays in your browser",rights:"All rights reserved.",madeFor:"Made for people who build.",
+calcsSub:"Pick a material, enter dimensions, add the result to your project.",
+cConcrete:"Concrete",cRebar:"Rebar",cWall:"Bricks & blocks",cPaint:"Paint",cTiles:"Tiles",cAgg:"Aggregates",cLumber:"Lumber",
+concreteDesc:"Slab, column or strip footing — volume, cement, sand, gravel, water.",
+shape:"Shape",shSlab:"Slab",shColumn:"Column",shFooting:"Strip footing",
+dimL:"Length (m)",dimW:"Width (m)",dimT:"Thickness / height (m)",mixRatio:"Mix ratio (cement:sand:gravel)",wastePct:"Waste (%)",
+calcBtn:"Calculate",addToProject:"Add to project",
+concreteVol:"Concrete volume",cementBags:"Cement (50 kg bags)",sandT:"Sand",gravelT:"Gravel",waterL:"Water",
+rebarDesc:"Weight per diameter and 12 m bars to order.",diaCol:"Diameter",totLenM:"Total length (m)",addRow:"+ Add row",
+rebarWt:"Weight",bars12m:"12 m bars",totalWt:"Total weight",
+wallDesc:"Masonry units and mortar for a wall.",wallL:"Wall length (m)",wallH:"Wall height (m)",unitType:"Unit type",
+uBlock:"Concrete block 390×190×190",uBrick:"Brick 250×120×65",openArea:"Openings area (m²)",
+unitsNeeded:"Units needed",mortarM3:"Mortar",
+paintDesc:"Litres and cans for walls.",paintArea:"Area to paint (m²)",coverage:"Coverage (m²/litre)",coats:"Coats",
+paintL:"Paint needed",cans15:"15 L cans",
+tilesDesc:"Tiles, adhesive and grout for floors.",floorL:"Floor length (m)",floorW:"Floor width (m)",tileSize:"Tile size (cm)",
+tilesNeeded:"Tiles needed",adhesiveKg:"Tile adhesive",groutKg:"Grout",
+aggDesc:"Volume to weight for sand, gravel and crushed stone.",aggType:"Material",aSand:"Sand (1.6 t/m³)",aGravel:"Gravel (1.5 t/m³)",aCrushed:"Crushed stone (1.55 t/m³)",volM3:"Volume (m³)",
+aggWt:"Weight",
+lumberDesc:"Timber volume from piece dimensions.",thPieces:"Pieces",thSection:"Section W×H (mm)",thLenM:"Length (m)",
+lumberVol:"Timber volume",
+projSub:"One material list from all calculators — ready to order.",projTitle:"Project material list",projDesc:"Add results from any calculator, adjust quantities, export once.",
+projNameL:"Project name",projNamePh:"e.g. Villa roof",thMaterial:"Material",thQty:"Quantity",thUnit:"Unit",
+dlCsv:"Download CSV",pdfBtn:"Export PDF",print:"Print",clearList:"Clear list",
+addedToProject:"Added to project.",listEmpty:"The project list is empty.",listCleared:"Project list cleared.",
+prSub:"Start free. Upgrade when your projects grow.",prForever:"forever",prF1:"All 7 calculators",prF2:"Project material list",prF3:"CSV & PDF export",prChooseFree:"You are on Free",prSoon:"coming soon",prP1:"Everything in Free",prP2:"Saved projects with history",prP3:"Branded quote PDFs",prNotify:"Notify me",
+msgLang:"Language changed.",msgExported:"File downloaded.",msgNotifyThanks:"Thanks! We will notify you.",msgInvalid:"Check the numbers you entered.",
+confirmDelete:"Delete this item?",yes:"Yes",no:"No"
+}};
+I18N.el={
+navHome:"Αρχική",navCalcs:"Υπολογιστές",navProject:"Έργο",navPricing:"Τιμές",openApp:"Άνοιγμα εφαρμογής",
+homeBadge:"Δωρεάν για οικοδόμους",heroTitle:"Πόσο υλικό χρειάζεσαι πραγματικά;",heroSub:"Το BuildQuant εκτιμά οικοδομικά υλικά σε δευτερόλεπτα — σκυρόδεμα, οπλισμό, τούβλα, μπογιές, πλακάκια, αδρανή και ξυλεία — και τα συνδυάζει σε μία λίστα έργου.",heroStart:"Ξεκίνα εκτίμηση",
+statCalcs:"υπολογιστές υλικών",statPrivate:"απόρρητο — τα δεδομένα μένουν στον browser σου",statFree:"για ξεκίνημα, χωρίς λογαριασμό",
+whoEyebrow:"Σε ποιους απευθύνεται",whoTitle:"Φτιαγμένο για όσους χτίζουν",whoSub:"Από τον εργοταξιάρχη μέχρι τον ιδιώτη ανακαινιστή — ακριβείς ποσότητες υλικών χωρίς ταλαιπωρία με spreadsheets.",
+who1t:"Εργολάβοι & μηχανικοί",who1b:"Γρήγορες προμετρήσεις για προσφορές και παραγγελίες. Η λειτουργία έργου ενώνει όλους τους υπολογιστές σε μία λίστα υλικών.",
+who2t:"Οικοδόμοι & κτίστες",who2b:"Σκυρόδεμα, κονίαμα, τούβλα και οπλισμός σε δευτερόλεπτα — με συντελεστές φύρας, επί τόπου από το κινητό.",
+who3t:"Ανακαινιστές & DIY",who3b:"Μπογιές, πλακάκια και ξυλεία για την ανακαίνισή σου — αγόρασε τη σωστή ποσότητα με την πρώτη, χωρίς άσκοπα δρομολόγια.",
+featEyebrow:"Υπολογιστές",featTitle:"Επτά εκτιμητές, ένα έργο",featSub:"Κάθε υπολογιστής βασίζεται σε πραγματικούς οικοδομικούς τύπους — και τροφοδοτεί τη λίστα υλικών του έργου σου.",
+f1t:"Σκυρόδεμα",f1b:"Πλάκες, υποστυλώματα και πέδιλα. Όγκος, τσουβάλια τσιμέντου, άμμος, χαλίκι και νερό από την αναλογία μίξης.",
+f2t:"Οπλισμός",f2b:"Βάρος ανά διάμετρο Φ8–Φ40, συνολικοί τόνοι και αριθμός ράβδων 12 m για παραγγελία.",
+f3t:"Τούβλα & τσιμεντόλιθοι",f3b:"Τεμάχια τοιχοποιίας και ποσότητα κονιάματος, με αφαίρεση ανοιγμάτων και συντελεστή φύρας.",
+f4t:"Μπογιά",f4b:"Λίτρα και δοχεία από την επιφάνεια, την κάλυψη και τα χέρια — με αφαίρεση ανοιγμάτων.",
+f5t:"Πλακάκια",f5b:"Αριθμός πλακιδίων με φύρα κοπής, κόλλα και αρμόστοκος για δάπεδα και τοίχους.",
+f6t:"Αδρανή & ξυλεία",f6b:"Άμμος, χαλίκι και θραυστό από όγκο σε βάρος, plus όγκος ξυλείας σε m³.",
+howEyebrow:"Πώς δουλεύει",howTitle:"Από τις διαστάσεις στη λίστα υλικών σε 3 βήματα",
+s1t:"Βάλε διαστάσεις",s1b:"Διάλεξε υπολογιστή και γράψε μήκη, επιφάνειες ή τεμάχια. Υποστηρίζονται μετρικές και αγγλικές μονάδες.",
+s2t:"Πάρε ποσότητες",s2b:"Πραγματικοί οικοδομικοί τύποι υπολογίζουν υλικά με συντελεστές φύρας — τσουβάλια, τόνους, λίτρα, τεμάχια.",
+s3t:"Χτίσε το έργο σου",s3b:"Πρόσθεσε κάθε αποτέλεσμα στη λίστα του έργου και εξήγαγε ένα CSV ή PDF για την παραγγελία.",
+faqEyebrow:"Συχνές ερωτήσεις",faqTitle:"Συχνές ερωτήσεις",
+q1:"Είναι δωρεάν το BuildQuant;",q1a:"Ναι. Όλοι οι υπολογιστές, η λίστα έργου και οι εξαγωγές είναι δωρεάν χωρίς λογαριασμό. Τα δεδομένα σου μένουν στον browser σου.",
+q2:"Πόσο ακριβείς είναι οι εκτιμήσεις;",q2a:"Οι τύποι ακολουθούν τη συνήθη οικοδομική πρακτική (συντελεστής ξηρού όγκου, standard πυκνότητες, βάρη οπλισμού). Για κρίσιμες παραγγελίες πρόσθεσε δικό σου περιθώριο ασφαλείας.",
+q3:"Συνδυάζονται οι υπολογιστές;",q3a:"Ναι — κάθε αποτέλεσμα μπορεί να προστεθεί στη λίστα υλικών του έργου, την οποία εξάγεις ως ένα CSV ή PDF.",
+q4:"Χρειάζεται λογαριασμός;",q4a:"Όχι. Όλα τρέχουν τοπικά στον browser σου, με εξαγωγή/εισαγωγή session για μεταφορά σε άλλη συσκευή.",
+ctaTitle:"Παράγγειλε ακριβώς ό,τι χρειάζεσαι.",ctaSub:"Η πρώτη σου εκτίμηση υλικών παίρνει λιγότερο από ένα λεπτό.",
+footerTag:"Εκτιμητής οικοδομικών υλικών για οικοδόμους, εργολάβους και ανακαινιστές.",
+ftProduct:"Προϊόν",ftCompany:"Εταιρεία",ftLegal:"Νομικά",ftPrivacy:"Απόρρητο — τα δεδομένα μένουν στον browser σου",rights:"Με επιφύλαξη παντός δικαιώματος.",madeFor:"Φτιαγμένο για όσους χτίζουν.",
+calcsSub:"Διάλεξε υλικό, βάλε διαστάσεις, πρόσθεσε το αποτέλεσμα στο έργο σου.",
+cConcrete:"Σκυρόδεμα",cRebar:"Οπλισμός",cWall:"Τούβλα & τσιμεντόλιθοι",cPaint:"Μπογιά",cTiles:"Πλακάκια",cAgg:"Αδρανή",cLumber:"Ξυλεία",
+concreteDesc:"Πλάκα, υποστύλωμα ή πέδιλο — όγκος, τσιμέντο, άμμος, χαλίκι, νερό.",
+shape:"Σχήμα",shSlab:"Πλάκα",shColumn:"Υποστύλωμα",shFooting:"Πέδιλο",
+dimL:"Μήκος (m)",dimW:"Πλάτος (m)",dimT:"Πάχος / ύψος (m)",mixRatio:"Αναλογία μίξης (τσιμέντο:άμμος:χαλίκι)",wastePct:"Φύρα (%)",
+calcBtn:"Υπολογισμός",addToProject:"Προσθήκη στο έργο",
+concreteVol:"Όγκος σκυροδέματος",cementBags:"Τσιμέντο (τσουβάλια 50 kg)",sandT:"Άμμος",gravelT:"Χαλίκι",waterL:"Νερό",
+rebarDesc:"Βάρος ανά διάμετρο και ράβδοι 12 m για παραγγελία.",diaCol:"Διάμετρος",totLenM:"Συνολικό μήκος (m)",addRow:"+ Προσθήκη γραμμής",
+rebarWt:"Βάρος",bars12m:"Ράβδοι 12 m",totalWt:"Συνολικό βάρος",
+wallDesc:"Τεμάχια τοιχοποιίας και κονίαμα για τοίχο.",wallL:"Μήκος τοίχου (m)",wallH:"Ύψος τοίχου (m)",unitType:"Τύπος τεμαχίου",
+uBlock:"Τσιμεντόλιθος 390×190×190",uBrick:"Τούβλο 250×120×65",openArea:"Επιφάνεια ανοιγμάτων (m²)",
+unitsNeeded:"Τεμάχια που χρειάζονται",mortarM3:"Κονίαμα",
+paintDesc:"Λίτρα και δοχεία για τοίχους.",paintArea:"Επιφάνεια βαφής (m²)",coverage:"Κάλυψη (m²/λίτρο)",coats:"Χέρια",
+paintL:"Μπογιά που χρειάζεται",cans15:"Δοχεία 15 L",
+tilesDesc:"Πλακάκια, κόλλα και αρμόστοκος για δάπεδα.",floorL:"Μήκος δαπέδου (m)",floorW:"Πλάτος δαπέδου (m)",tileSize:"Διάσταση πλακιδίου (cm)",
+tilesNeeded:"Πλακάκια που χρειάζονται",adhesiveKg:"Κόλλα πλακιδίων",groutKg:"Αρμόστοκος",
+aggDesc:"Από όγκο σε βάρος για άμμο, χαλίκι και θραυστό.",aggType:"Υλικό",aSand:"Άμμος (1,6 t/m³)",aGravel:"Χαλίκι (1,5 t/m³)",aCrushed:"Θραυστό (1,55 t/m³)",volM3:"Όγκος (m³)",
+aggWt:"Βάρος",
+lumberDesc:"Όγκος ξυλείας από διαστάσεις τεμαχίων.",thPieces:"Τεμάχια",thSection:"Διατομή Π×Υ (mm)",thLenM:"Μήκος (m)",
+lumberVol:"Όγκος ξυλείας",
+projSub:"Μία λίστα υλικών από όλους τους υπολογιστές — έτοιμη για παραγγελία.",projTitle:"Λίστα υλικών έργου",projDesc:"Πρόσθεσε αποτελέσματα από κάθε υπολογιστή, προσάρμοσε ποσότητες, εξήγαγε μία φορά.",
+projNameL:"Όνομα έργου",projNamePh:"π.χ. Στέγη βίλας",thMaterial:"Υλικό",thQty:"Ποσότητα",thUnit:"Μονάδα",
+dlCsv:"Λήψη CSV",pdfBtn:"Εξαγωγή PDF",print:"Εκτύπωση",clearList:"Καθαρισμός λίστας",
+addedToProject:"Προστέθηκε στο έργο.",listEmpty:"Η λίστα έργου είναι άδεια.",listCleared:"Η λίστα καθαρίστηκε.",
+prSub:"Ξεκίνα δωρεάν. Αναβάθμισε όταν μεγαλώσουν τα έργα σου.",prForever:"για πάντα",prF1:"Και οι 7 υπολογιστές",prF2:"Λίστα υλικών έργου",prF3:"Εξαγωγή CSV & PDF",prChooseFree:"Είσαι στο Free",prSoon:"σύντομα",prP1:"Όλα του Free",prP2:"Αποθηκευμένα έργα με ιστορικό",prP3:"PDF προσφορών με λογότυπο",prNotify:"Ειδοποίησέ με",
+msgLang:"Η γλώσσα άλλαξε.",msgExported:"Το αρχείο κατέβηκε.",msgNotifyThanks:"Ευχαριστούμε! Θα σε ειδοποιήσουμε.",msgInvalid:"Έλεγξε τους αριθμούς που έβαλες.",
+confirmDelete:"Διαγραφή αυτού του στοιχείου;",yes:"Ναι",no:"Όχι"
+};
+/* ================= core ================= */
+const $=id=>document.getElementById(id);
+const LSKEY='buildquant_v1';
+const REBAR_W={8:.395,10:.617,12:.888,14:1.21,16:1.58,18:2,20:2.47,22:2.98,25:3.85,28:4.83,32:6.31,36:7.99,40:9.87};
+let LANG='en';
+let S={lang:'en',project:[],projectName:''};
+function load(){try{const r=localStorage.getItem(LSKEY);return r?JSON.parse(r):null}catch(e){return null}}
+function persist(){try{localStorage.setItem(LSKEY,JSON.stringify(S))}catch(e){}}
+function t(k){const d=I18N[LANG]||{};if(d[k]!==undefined)return d[k];const e=I18N.en||{};return e[k]!==undefined?e[k]:k}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function num(v){const n=parseFloat(v);return isFinite(n)?n:0}
+function fmt(n,d){if(!isFinite(n))return'—';d=d==null?1:d;return Number(n).toLocaleString(LANG,{minimumFractionDigits:d,maximumFractionDigits:d})}
+let toastT=null;
+function toast(m){const el=$('toast');el.textContent=m;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2600)}
+function showResult(id,rows){const el=$(id);el.innerHTML='<table>'+rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</table>';el.classList.add('show')}
+function addItems(items){items.forEach(it=>S.project.push({id:uid(),material:it[0],qty:it[1],unit:it[2]||''}));persist();renderProject();toast(t('addedToProject'))}
+/* ---------- i18n + nav ---------- */
+function applyI18n(){
+  document.documentElement.lang=LANG;
+  document.documentElement.dir=(LANG==='ar')?'rtl':'ltr';
+  document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=t(e.getAttribute('data-i18n'))});
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>{e.placeholder=t(e.getAttribute('data-i18n-ph'))});
+  const s=$('langSel');s.innerHTML='';
+  ['en','el'].forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c==='en'?'English':'Ελληνικά';if(c===LANG)o.selected=true;s.appendChild(o)});
+  document.querySelectorAll('#mainnav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===CUR));
+}
+let CUR='home';
+function show(v){CUR=v;document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));$('v-'+v).classList.add('active');document.querySelectorAll('#mainnav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===v));window.scrollTo(0,0)}
+document.addEventListener('click',e=>{const n=e.target.closest('[data-nav]');if(n)show(n.dataset.nav)});
+/* ================= calculators ================= */
+let CC=null; // last concrete result
+function calcConcrete(){
+  const L=num($('ccL').value),W=num($('ccW').value),T=num($('ccT').value);
+  if(!(L>0&&W>0&&T>0)){toast(t('msgInvalid'));return}
+  const mix=$('ccMix').value.split(':').map(Number),sum=mix[0]+mix[1]+mix[2];
+  const w=1+num($('ccWaste').value)/100;
+  const V=L*W*T*w, Vd=V*1.52;
+  const cemKg=Vd*mix[0]/sum*1440, bags=cemKg/50;
+  const sandT=Vd*mix[1]/sum*1.6, gravT=Vd*mix[2]/sum*1.5, waterL=cemKg*0.5;
+  CC={vol:V,bags,sandT,gravT,waterL};
+  showResult('ccOut',[[t('concreteVol'),fmt(V,2)+' m³'],[t('cementBags'),fmt(bags,1)],[t('sandT'),fmt(sandT,2)+' t'],[t('gravelT'),fmt(gravT,2)+' t'],[t('waterL'),fmt(waterL,0)+' L']]);
+}
+let RB=null;
+function rbRows(){return[...document.querySelectorAll('#rbBody tr')].map(tr=>({dia:num(tr.querySelector('[data-f="dia"]').value),len:num(tr.querySelector('[data-f="len"]').value)}))}
+function renderRbRows(data){const tb=$('rbBody');tb.innerHTML='';(data||[{dia:12,len:100}]).forEach(r=>{const tr=document.createElement('tr');
+  tr.innerHTML='<td><select data-f="dia">'+Object.keys(REBAR_W).map(d=>'<option value="'+d+'"'+(String(r.dia)===d?' selected':'')+'>Φ'+d+'</option>').join('')+'</select></td><td><input type="number" min="0" step="any" value="'+r.len+'" data-f="len"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+  tr.querySelector('[data-del]').onclick=()=>{tr.remove()};tb.appendChild(tr)})}
+function calcRebar(){const rows=rbRows().filter(r=>r.len>0);if(!rows.length){toast(t('msgInvalid'));return}
+  let tot=0;const det=rows.map(r=>{const w=r.len*(REBAR_W[r.dia]||0);tot+=w;return{d:r.dia,len:r.len,w,bars:r.len/12}});
+  RB={det,tot};
+  showResult('rbOut',det.map(d=>['Φ'+d.d+' — '+fmt(d.len,0)+' m',fmt(d.w,1)+' kg ('+fmt(d.bars,1)+' '+t('bars12m')+')']).concat([[t('totalWt'),fmt(tot,1)+' kg ('+fmt(tot/1000,2)+' t)']]));
+}
+let WL=null;
+function calcWall(){
+  const L=num($('wL').value),H=num($('wH').value),open=num($('wOpen').value);
+  if(!(L>0&&H>0)){toast(t('msgInvalid'));return}
+  const type=$('wType').value, w=1+num($('wWaste').value)/100;
+  const net=Math.max(L*H-open,0);
+  const face=type==='block'?0.39*0.19:0.25*0.065;
+  const units=Math.ceil(net/face*w), mortar=net*0.025*w;
+  WL={units,mortar,type};
+  showResult('wOut',[[t('unitsNeeded'),fmt(units,0)+' '+(type==='block'?t('uBlock').split(' ')[0]+'s':t('uBrick').split(' ')[0]+'s')],[t('mortarM3'),fmt(mortar,2)+' m³']]);
+}
+let PT=null;
+function calcPaint(){const A=num($('pArea').value),cov=num($('pCov').value),coats=Math.max(1,Math.round(num($('pCoats').value)));
+  if(!(A>0&&cov>0)){toast(t('msgInvalid'));return}
+  const L=A/cov*coats;PT={L,cans:L/15};
+  showResult('pOut',[[t('paintL'),fmt(L,1)+' L'],[t('cans15'),fmt(L/15,1)]]);
+}
+let TL=null;
+function calcTiles(){const L=num($('tL').value),W=num($('tW').value);
+  if(!(L>0&&W>0)){toast(t('msgInvalid'));return}
+  const sv=$('tSize').value;let ta;
+  if(sv==='3060')ta=0.3*0.6;else{const s=num(sv)/100;ta=s*s}
+  const w=1+num($('tWaste').value)/100, area=L*W;
+  const tiles=Math.ceil(area/ta*w), adh=area*4, grout=area*0.5;
+  TL={tiles,adh,grout};
+  showResult('tOut',[[t('tilesNeeded'),fmt(tiles,0)],[t('adhesiveKg'),fmt(adh,1)+' kg'],[t('groutKg'),fmt(grout,1)+' kg']]);
+}
+let AG=null;
+function calcAgg(){const V=num($('aVol').value),d=num($('aType').value),w=1+num($('aWaste').value)/100;
+  if(!(V>0)){toast(t('msgInvalid'));return}
+  const tonnes=V*d*w;AG={tonnes,name:$('aType').selectedOptions[0].textContent};
+  showResult('aOut',[[t('aggWt'),fmt(tonnes,2)+' t']]);
+}
+let LB=null;
+function lbRows(){return[...document.querySelectorAll('#lbBody tr')].map(tr=>({pcs:Math.round(num(tr.querySelector('[data-f="pcs"]').value)),w:num(tr.querySelector('[data-f="w"]').value),h:num(tr.querySelector('[data-f="h"]').value),len:num(tr.querySelector('[data-f="len"]').value)}))}
+function renderLbRows(data){const tb=$('lbBody');tb.innerHTML='';(data||[{pcs:10,w:50,h:100,len:4}]).forEach(r=>{const tr=document.createElement('tr');
+  tr.innerHTML='<td><input type="number" min="0" step="1" value="'+r.pcs+'" data-f="pcs"></td><td><input type="text" value="'+r.w+'x'+r.h+'" data-f="sec" placeholder="50x100"></td><td><input type="number" min="0" step="any" value="'+r.len+'" data-f="len"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+  tr.querySelector('[data-del]').onclick=()=>{tr.remove()};tb.appendChild(tr)})}
+function calcLumber(){
+  const tb=$('lbBody');let vol=0;let ok=false;
+  [...tb.querySelectorAll('tr')].forEach(tr=>{const pcs=Math.round(num(tr.querySelector('[data-f="pcs"]').value)),len=num(tr.querySelector('[data-f="len"]').value);
+    const sec=tr.querySelector('[data-f="sec"]').value.split('x');const w=num(sec[0]),h=num(sec[1]);
+    if(pcs>0&&w>0&&h>0&&len>0){vol+=pcs*(w/1000)*(h/1000)*len;ok=true}});
+  if(!ok){toast(t('msgInvalid'));return}
+  LB={vol};showResult('lbOut',[[t('lumberVol'),fmt(vol,3)+' m³']]);
+}
+/* ================= project ================= */
+function renderProject(){const tb=$('pjBody');tb.innerHTML='';
+  $('pjName').value=S.projectName||'';
+  if(!S.project.length){tb.innerHTML='<tr><td colspan="4" class="muted">'+esc(t('listEmpty'))+'</td></tr>';return}
+  S.project.forEach(it=>{const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+esc(it.material)+'</td><td><input type="text" value="'+esc(it.qty)+'" data-f="qty" style="width:110px"></td><td>'+esc(it.unit)+'</td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+    tr.querySelector('[data-f="qty"]').addEventListener('input',e=>{it.qty=e.target.value;persist()});
+    tr.querySelector('[data-del]').onclick=()=>{S.project=S.project.filter(x=>x.id!==it.id);persist();renderProject()};
+    tb.appendChild(tr)})}
+function dl(name,content,mime){const b=new Blob([content],{type:mime||'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
+function exportCSV(){if(!S.project.length){toast(t('listEmpty'));return}
+  let h='material;quantity;unit\n';S.project.forEach(it=>{h+=[it.material,it.qty,it.unit].join(';')+'\n'});
+  dl('buildquant-project.csv',h,'text/csv');toast(t('msgExported'))}
+function exportPDF(){if(!S.project.length){toast(t('listEmpty'));return}
+  if(!(window.jspdf&&window.jspdf.jsPDF)){if(window.print)window.print();return}
+  const{jsPDF}=window.jspdf,doc=new jsPDF();let y=18;
+  doc.setFont('courier','bold');doc.setFontSize(16);doc.text('BuildQuant - Material List',10,y);y+=8;
+  doc.setFont('courier','normal');doc.setFontSize(11);
+  doc.text('Project: '+(S.projectName||'-'),10,y);y+=6;
+  doc.text('Date: '+new Date().toLocaleDateString('en-GB'),10,y);y+=8;
+  doc.setFont('courier','bold');doc.text('Material                    Quantity',10,y);y+=6;doc.setFont('courier','normal');
+  S.project.forEach(it=>{if(y>275){doc.addPage();y=18}
+    const lines=doc.splitTextToSize(it.material+'  —  '+it.qty+' '+it.unit,185);
+    doc.text(lines,10,y);y+=lines.length*6});
+  doc.save('buildquant-project.pdf');toast(t('msgExported'))}
+/* ================= init ================= */
+function init(){
+  const sv=load();if(sv){S=Object.assign(S,sv)}
+  LANG=(S.lang&&I18N[S.lang])?S.lang:'en';S.lang=LANG;
+  renderRbRows();renderLbRows();renderProject();applyI18n();show('home');
+  $('langSel').addEventListener('change',e=>{LANG=e.target.value;S.lang=LANG;persist();applyI18n();toast(t('msgLang'))});
+  document.querySelectorAll('#calcTabs button').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('#calcTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+    document.querySelectorAll('.calc').forEach(c=>c.classList.remove('active'));$('c-'+b.dataset.calc).classList.add('active')}));
+  $('ccGo').onclick=calcConcrete;
+  $('ccAdd').onclick=()=>{if(!CC){toast(t('msgInvalid'));return}addItems([[t('cConcrete'),fmt(CC.vol,2),'m³'],[t('cementBags'),fmt(CC.bags,1),'pcs'],[t('sandT'),fmt(CC.sandT,2),'t'],[t('gravelT'),fmt(CC.gravT,2),'t']])};
+  $('rbAdd').onclick=()=>renderRbRows([...rbRows(),{dia:12,len:100}]);
+  $('rbGo').onclick=calcRebar;
+  $('rbAddP').onclick=()=>{if(!RB){toast(t('msgInvalid'));return}addItems(RB.det.map(d=>['Rebar Φ'+d.d,fmt(d.w,1),'kg']))};
+  $('wGo').onclick=calcWall;
+  $('wAdd').onclick=()=>{if(!WL){toast(t('msgInvalid'));return}addItems([[(WL.type==='block'?'Blocks':'Bricks'),fmt(WL.units,0),'pcs'],[t('mortarM3'),fmt(WL.mortar,2),'m³']])};
+  $('pGo').onclick=calcPaint;
+  $('pAdd').onclick=()=>{if(!PT){toast(t('msgInvalid'));return}addItems([[t('cPaint'),fmt(PT.L,1),'L']])};
+  $('tGo').onclick=calcTiles;
+  $('tAdd').onclick=()=>{if(!TL){toast(t('msgInvalid'));return}addItems([[t('cTiles'),fmt(TL.tiles,0),'pcs'],[t('adhesiveKg'),fmt(TL.adh,1),'kg']])};
+  $('aGo').onclick=calcAgg;
+  $('aAdd').onclick=()=>{if(!AG){toast(t('msgInvalid'));return}addItems([[AG.name.split(' (')[0],fmt(AG.tonnes,2),'t']])};
+  $('lbAdd').onclick=()=>{const tb=$('lbBody');const tr=document.createElement('tr');tr.innerHTML='<td><input type="number" min="0" step="1" value="10" data-f="pcs"></td><td><input type="text" value="50x100" data-f="sec"></td><td><input type="number" min="0" step="any" value="4" data-f="len"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';tr.querySelector('[data-del]').onclick=()=>tr.remove();tb.appendChild(tr)};
+  $('lbGo').onclick=calcLumber;
+  $('lbAddP').onclick=()=>{if(!LB){toast(t('msgInvalid'));return}addItems([[t('cLumber'),fmt(LB.vol,3),'m³']])};
+  $('pjName').addEventListener('input',e=>{S.projectName=e.target.value;persist()});
+  $('pjCsv').onclick=exportCSV;$('pjPdf').onclick=exportPDF;
+  $('pjPrint').onclick=()=>window.print();
+  $('pjClear').onclick=()=>{if(confirm(t('confirmDelete'))){S.project=[];persist();renderProject();toast(t('listCleared'))}};
+  $('notifyBtn').onclick=()=>toast(t('msgNotifyThanks'));
+}
+document.addEventListener('DOMContentLoaded',init);
+</script>
+</body>
 </html>
