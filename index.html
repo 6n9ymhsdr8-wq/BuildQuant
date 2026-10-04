@@ -111,6 +111,22 @@ footer .copy{border-top:1px solid rgba(255,255,255,.15);padding-top:20px;font-si
 .faq .a{padding:16px 20px;color:var(--muted);font-size:14.5px}
 @media(max-width:900px){.grid3,.steps{grid-template-columns:1fr}.grid2{grid-template-columns:1fr}.formgrid{grid-template-columns:1fr}.mainnav{display:none}.hero h1{font-size:32px}footer .fgrid{grid-template-columns:1fr 1fr}}
 @media print{.topbar,.hero,.no-print,footer,#toast{display:none!important}body{background:#fff}.view{display:none!important}.view.active{display:block!important}@page{margin:12mm}}
+
+/* ---------- dark mode ---------- */
+body.dark{--bg:#131815;--card:#1c241f;--ink:#e9f0ea;--muted:#9db3a4;--line:#2c382f;--sh:none}
+body.dark .topbar{background:#182019}
+body.dark .mainnav button:hover{background:#232d27}
+body.dark .mainnav button.active{background:#24402f}
+body.dark #langSel,body.dark .formgrid .fg input,body.dark .formgrid .fg select,body.dark table.data input,body.dark table.data select{background:#232d27;border-color:#2c382f;color:var(--ink)}
+body.dark table.data th{background:#202a24}
+body.dark table.data tr:nth-child(even) td{background:#1a221d}
+body.dark .btn-ghost{background:#232d27;color:#bfe3c9}
+body.dark .resultbox{background:#1d2b22;border-color:#2c4a35}
+body.dark .resultbox td{border-color:#2c4a35}
+body.dark .calctabs button{background:#232d27;border-color:#2c382f}
+body.dark .apphead{background:#182019}
+body.dark .faq details{background:#1c241f}
+body.dark .section[style]{background:#182019!important}
 </style>
 </head>
 <body>
@@ -124,6 +140,7 @@ footer .copy{border-top:1px solid rgba(255,255,255,.15);padding-top:20px;font-si
       <button data-nav="pricing" data-i18n="navPricing">Pricing</button>
     </nav>
     <div class="bar-cta">
+      <button class="btn btn-ghost btn-sm" id="darkBtn" title="Dark mode">◐</button>
       <select id="langSel" aria-label="Language"></select>
       <button class="btn btn-primary btn-sm" data-nav="calcs" data-i18n="openApp">Open app</button>
     </div>
@@ -231,6 +248,12 @@ footer .copy{border-top:1px solid rgba(255,255,255,.15);padding-top:20px;font-si
       <button data-calc="tiles" data-i18n="cTiles">Tiles</button>
       <button data-calc="agg" data-i18n="cAgg">Aggregates</button>
       <button data-calc="lumber" data-i18n="cLumber">Lumber</button>
+      <button data-calc="excav" data-i18n="cExcav">Excavation</button>
+      <button data-calc="beams" data-i18n="cBeams">Steel beams</button>
+      <button data-calc="drywall" data-i18n="cDrywall">Drywall</button>
+      <button data-calc="insul" data-i18n="cInsul">Insulation</button>
+      <button data-calc="roof" data-i18n="cRoof">Roofing</button>
+      <button data-calc="fence" data-i18n="cFence">Fencing</button>
     </div>
 
     <div class="calc active" id="c-concrete"><div class="panel">
@@ -310,6 +333,69 @@ footer .copy{border-top:1px solid rgba(255,255,255,.15);padding-top:20px;font-si
   </div>
 </section>
 
+    <div class="calc" id="c-excav"><div class="panel">
+      <h3 data-i18n="cExcav">Excavation</h3><p class="desc" data-i18n="excDesc">Dug volume, loose volume with swell, truck loads.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="exL" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="exW" type="number" min="0" step="any" value="8"></div>
+        <div class="fg"><label data-i18n="exDepth">Depth (m)</label><input id="exD" type="number" min="0" step="any" value="1.5"></div>
+        <div class="fg"><label data-i18n="swellPct">Swell (%)</label><input id="exSwell" type="number" min="0" step="1" value="25"></div>
+        <div class="fg"><label data-i18n="truckCap">Truck capacity (m³)</label><input id="exTruck" type="number" min="0" step="any" value="10"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="exGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="exAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="exOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-beams"><div class="panel">
+      <h3 data-i18n="cBeams">Steel beams</h3><p class="desc" data-i18n="beamsDesc">Weight of IPE / HEA / HEB profiles.</p>
+      <table class="data"><thead><tr><th data-i18n="thProfile">Profile</th><th data-i18n="thLenM">Length (m)</th><th data-i18n="thPieces">Pieces</th><th></th></tr></thead><tbody id="bmBody"></tbody></table>
+      <div class="row-actions"><button class="btn btn-ghost btn-sm" id="bmAddRow" data-i18n="addRow">+ Add row</button><button class="btn btn-primary btn-sm" id="bmGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="bmAddP" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="bmOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-drywall"><div class="panel">
+      <h3 data-i18n="cDrywall">Drywall</h3><p class="desc" data-i18n="dwDesc">Boards, screws and joint compound for walls/ceilings.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="dwArea" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="dwWaste" type="number" min="0" step="1" value="10"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="dwGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="dwAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="dwOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-insul"><div class="panel">
+      <h3 data-i18n="cInsul">Insulation</h3><p class="desc" data-i18n="insDesc">Volume and rolls from area and thickness.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="inArea" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="insThick">Thickness (mm)</label><input id="inThick" type="number" min="0" step="any" value="100"></div>
+        <div class="fg"><label data-i18n="rollCover">Roll coverage (m²)</label><input id="inRoll" type="number" min="0" step="any" value="10"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="inGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="inAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="inOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-roof"><div class="panel">
+      <h3 data-i18n="cRoof">Roofing</h3><p class="desc" data-i18n="roofDesc">Roof area with slope, tiles or metal sheets.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="rfL" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="rfW" type="number" min="0" step="any" value="8"></div>
+        <div class="fg"><label data-i18n="roofSlope">Slope (%)</label><input id="rfSlope" type="number" min="0" step="any" value="30"></div>
+        <div class="fg"><label data-i18n="roofType">Covering</label><select id="rfType"><option value="tiles" data-i18n="rfTiles">Tiles (10/m²)</option><option value="sheets" data-i18n="rfSheets">Metal sheets</option></select></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="rfGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="rfAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="rfOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-fence"><div class="panel">
+      <h3 data-i18n="cFence">Fencing</h3><p class="desc" data-i18n="fenceDesc">Posts and mesh rolls for a perimeter.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="fencePerim">Perimeter (m)</label><input id="fePerim" type="number" min="0" step="any" value="100"></div>
+        <div class="fg"><label data-i18n="postSpacing">Post spacing (m)</label><input id="feSpacing" type="number" min="0" step="any" value="2.5"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="feGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="feAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="feOut"></div>
+    </div></div>
+
 <!-- ================= PROJECT ================= -->
 <section class="view" id="v-project">
   <div class="apphead"><div class="wrap"><h2 data-i18n="navProject">Project</h2><p data-i18n="projSub">One material list from all calculators — ready to order.</p></div></div>
@@ -318,15 +404,38 @@ footer .copy{border-top:1px solid rgba(255,255,255,.15);padding-top:20px;font-si
       <h3 data-i18n="projTitle">Project material list</h3>
       <p class="desc" data-i18n="projDesc">Add results from any calculator, adjust quantities, export once.</p>
       <div class="formgrid" style="margin-bottom:16px">
+        <div class="fg"><label data-i18n="projSelL">Project</label><select id="pjSel"></select></div>
         <div class="fg"><label data-i18n="projNameL">Project name</label><input id="pjName" data-i18n-ph="projNamePh" placeholder="e.g. Villa roof"></div>
+        <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="pjNew" data-i18n="newProject">+ New</button><button class="btn btn-ghost btn-sm" id="pjDel" data-i18n="del">Delete</button></div></div>
       </div>
-      <table class="data"><thead><tr><th data-i18n="thMaterial">Material</th><th data-i18n="thQty">Quantity</th><th data-i18n="thUnit">Unit</th><th></th></tr></thead><tbody id="pjBody"></tbody></table>
+      <table class="data"><thead><tr><th data-i18n="thMaterial">Material</th><th data-i18n="thQty">Quantity</th><th data-i18n="thUnit">Unit</th><th data-i18n="thPrice">Price/unit</th><th data-i18n="thTotal">Total</th><th></th></tr></thead><tbody id="pjBody"></tbody></table>
+      <div class="formgrid" style="margin-top:16px;max-width:640px">
+        <div class="fg"><label data-i18n="currencyL">Currency</label><select id="pjCur"><option>€</option><option>$</option><option>£</option><option>CHF</option><option>lei</option></select></div>
+        <div class="fg"><label data-i18n="marginPct">Margin (%)</label><input id="pjMargin" type="number" min="0" step="1" value="0"></div>
+        <div class="fg"><label data-i18n="grandTotal">Total</label><div id="pjTotal" style="font-size:22px;font-weight:800;padding:7px 0">—</div></div>
+      </div>
+      <div class="hint" id="pjSub"></div>
       <div class="row-actions">
         <button class="btn btn-ghost btn-sm" id="pjCsv" data-i18n="dlCsv">Download CSV</button>
-        <button class="btn btn-ghost btn-sm" id="pjPdf" data-i18n="pdfBtn">Export PDF</button>
+        <button class="btn btn-ghost btn-sm" id="pjQuote" data-i18n="quoteBtn">Quote PDF</button>
+        <button class="btn btn-ghost btn-sm" id="pjShare" data-i18n="shareBtn">Share link</button>
         <button class="btn btn-ghost btn-sm" id="pjPrint" data-i18n="print">Print</button>
         <button class="btn btn-ghost btn-sm" id="pjClear" data-i18n="clearList">Clear list</button>
       </div>
+    </div>
+    <div class="panel">
+      <h3 data-i18n="companyTitle">Company (for quotes)</h3>
+      <p class="desc" data-i18n="companyDesc">Appears on the quote PDF.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="companyName">Company name</label><input id="coName" data-i18n-ph="companyPh" placeholder="e.g. Acme Builders"></div>
+        <div class="fg"><label data-i18n="clientL">Client</label><input id="coClient" data-i18n-ph="clientPh" placeholder="Client name"></div>
+        <div class="fg"><label data-i18n="companyLogo">Logo</label><input type="file" id="coLogo" accept="image/*"></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h3 data-i18n="priceDbTitle">Price database</h3>
+      <p class="desc" data-i18n="priceDbDesc">Default prices applied when adding to the project. Editable.</p>
+      <table class="data"><thead><tr><th data-i18n="thMaterial">Material</th><th data-i18n="thPrice">Price</th><th data-i18n="thUnit">Unit</th></tr></thead><tbody id="pdbBody"></tbody></table>
     </div>
   </div>
 </section>
@@ -337,7 +446,7 @@ footer .copy{border-top:1px solid rgba(255,255,255,.15);padding-top:20px;font-si
   <div class="wrap">
     <div class="price-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,420px));gap:22px;justify-content:center">
       <div class="card" style="position:relative"><h3>Free</h3><div style="font-size:40px;font-weight:800;margin:10px 0 2px">0</div><div class="muted" data-i18n="prForever">forever</div>
-        <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prF1">All 7 calculators</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prF2">Project material list</li><li style="padding:8px 0" data-i18n="prF3">CSV &amp; PDF export</li></ul>
+        <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prF1">All 13 calculators</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prF2">Project material list</li><li style="padding:8px 0" data-i18n="prF3">CSV &amp; PDF export</li></ul>
         <button class="btn btn-ghost" style="width:100%" data-i18n="prChooseFree">You are on Free</button></div>
       <div class="card" style="position:relative;border:2px solid var(--brand)"><h3>Pro</h3><div style="font-size:40px;font-weight:800;margin:10px 0 2px">—</div><div class="muted" data-i18n="prSoon">coming soon</div>
         <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prP1">Everything in Free</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prP2">Saved projects with history</li><li style="padding:8px 0" data-i18n="prP3">Branded quote PDFs</li></ul>
@@ -472,6 +581,177 @@ prSub:"Ξεκίνα δωρεάν. Αναβάθμισε όταν μεγαλώσο
 msgLang:"Η γλώσσα άλλαξε.",msgExported:"Το αρχείο κατέβηκε.",msgNotifyThanks:"Ευχαριστούμε! Θα σε ειδοποιήσουμε.",msgInvalid:"Έλεγξε τους αριθμούς που έβαλες.",
 confirmDelete:"Διαγραφή αυτού του στοιχείου;",yes:"Ναι",no:"Όχι"
 };
+Object.assign(I18N.en,{
+cExcav:"Excavation",cBeams:"Steel beams",cDrywall:"Drywall",cInsul:"Insulation",cRoof:"Roofing",cFence:"Fencing",
+excDesc:"Dug volume, loose volume with swell, and truck loads.",
+exDepth:"Depth (m)",swellPct:"Swell (%)",truckCap:"Truck capacity (m³)",
+excVol:"Excavated volume",looseVol:"Loose volume",truckLoads:"Truck loads",
+beamsDesc:"Weight of IPE / HEA / HEB steel profiles.",
+thProfile:"Profile",thLenM:"Length (m)",thPieces:"Pieces",totalWt:"Total weight",
+dwDesc:"Boards, screws and joint compound for walls and ceilings.",
+dwBoards:"Boards (1.2 × 2.4 m)",dwScrews:"Screws",dwCompound:"Joint compound",
+insDesc:"Insulation volume and rolls from area and thickness.",
+insThick:"Thickness (mm)",rollCover:"Roll coverage (m²)",insVol:"Insulation volume",insRolls:"Rolls",
+roofDesc:"Roof area with slope correction, tiles or metal sheets.",
+roofSlope:"Slope (%)",roofType:"Covering",rfTiles:"Tiles (10/m²)",rfSheets:"Metal sheets",
+roofArea:"Roof area",rfTilesN:"Roof tiles",rfSheetsN:"Metal sheets",
+fenceDesc:"Posts and mesh rolls for a perimeter.",
+fencePerim:"Perimeter (m)",postSpacing:"Post spacing (m)",fencePosts:"Posts",meshRolls:"Mesh rolls (50 m)",
+projSelL:"Project",newProject:"+ New",del:"Delete",
+thPrice:"Price/unit",thTotal:"Total",currencyL:"Currency",marginPct:"Margin (%)",grandTotal:"Total",subtotal:"Subtotal",
+companyTitle:"Company (for quotes)",companyDesc:"Appears on the branded quote PDF.",
+companyName:"Company name",companyPh:"e.g. Acme Builders",clientL:"Client",clientPh:"Client name",companyLogo:"Logo",
+priceDbTitle:"Price database",priceDbDesc:"Default prices applied when adding items to the project. Editable anytime.",
+quoteBtn:"Quote PDF",shareBtn:"Share link",linkCopied:"Link copied to clipboard.",sharedTag:"shared",msgImported:"Project imported from link."});
+Object.assign(I18N.el,{
+cExcav:"Εκσκαφές",cBeams:"Χαλύβδινες δοκοί",cDrywall:"Γυψοσανίδες",cInsul:"Μόνωση",cRoof:"Στέγη",cFence:"Περίφραξη",
+excDesc:"Όγκος εκσκαφής, χαλαρός όγκος με διόγκωση και δρομολόγια φορτηγών.",
+exDepth:"Βάθος (m)",swellPct:"Διόγκωση (%)",truckCap:"Χωρητικότητα φορτηγού (m³)",
+excVol:"Όγκος εκσκαφής",looseVol:"Χαλαρός όγκος",truckLoads:"Δρομολόγια",
+beamsDesc:"Βάρος χαλύβδινων προφίλ IPE / HEA / HEB.",
+thProfile:"Προφίλ",thLenM:"Μήκος (m)",thPieces:"Τεμάχια",totalWt:"Συνολικό βάρος",
+dwDesc:"Γυψοσανίδες, βίδες και στόκος για τοίχους και οροφές.",
+dwBoards:"Γυψοσανίδες (1,2 × 2,4 m)",dwScrews:"Βίδες",dwCompound:"Στόκος αρμών",
+insDesc:"Όγκος μόνωσης και ρολά από επιφάνεια και πάχος.",
+insThick:"Πάχος (mm)",rollCover:"Κάλυψη ρολού (m²)",insVol:"Όγκος μόνωσης",insRolls:"Ρολά",
+roofDesc:"Επιφάνεια στέγης με διόρθωση κλίσης, κεραμίδια ή λαμαρίνες.",
+roofSlope:"Κλίση (%)",roofType:"Επικάλυψη",rfTiles:"Κεραμίδια (10/m²)",rfSheets:"Λαμαρίνες",
+roofArea:"Επιφάνεια στέγης",rfTilesN:"Κεραμίδια",rfSheetsN:"Λαμαρίνες",
+fenceDesc:"Πάσσαλοι και ρολά πλέγματος για περίμετρο.",
+fencePerim:"Περίμετρος (m)",postSpacing:"Απόσταση πασσάλων (m)",fencePosts:"Πάσσαλοι",meshRolls:"Ρολά πλέγματος (50 m)",
+projSelL:"Έργο",newProject:"+ Νέο",del:"Διαγραφή",
+thPrice:"Τιμή/μον.",thTotal:"Σύνολο",currencyL:"Νόμισμα",marginPct:"Κέρδος (%)",grandTotal:"Σύνολο",subtotal:"Υποσύνολο",
+companyTitle:"Εταιρεία (για προσφορές)",companyDesc:"Εμφανίζεται στο PDF προσφοράς.",
+companyName:"Όνομα εταιρείας",companyPh:"π.χ. Acme Builders",clientL:"Πελάτης",clientPh:"Όνομα πελάτη",companyLogo:"Λογότυπο",
+priceDbTitle:"Βάση τιμών",priceDbDesc:"Προεπιλεγμένες τιμές όταν προσθέτεις υλικά στο έργο. Αλλάζουν οποιαδήποτε στιγμή.",
+quoteBtn:"PDF προσφοράς",shareBtn:"Κοινοποίηση συνδέσμου",linkCopied:"Ο σύνδεσμος αντιγράφηκε.",sharedTag:"κοινόχρηστο",msgImported:"Το έργο εισήχθη από σύνδεσμο."});
+I18N.de={cExcav:"Aushub",cBeams:"Stahlträger",cDrywall:"Trockenbau",cInsul:"Dämmung",cRoof:"Dach",cFence:"Zaun",
+excDesc:"Aushubvolumen, lockeres Volumen mit Auflockerung, LKW-Fahrten.",
+exDepth:"Tiefe (m)",swellPct:"Auflockerung (%)",truckCap:"LKW-Kapazität (m³)",
+excVol:"Aushubvolumen",looseVol:"Lockervolumen",truckLoads:"LKW-Fahrten",
+beamsDesc:"Gewicht von IPE / HEA / HEB Stahlprofilen.",
+thProfile:"Profil",thLenM:"Länge (m)",thPieces:"Stück",totalWt:"Gesamtgewicht",
+dwDesc:"Platten, Schrauben und Spachtelmasse für Wände und Decken.",
+dwBoards:"Platten (1,2 × 2,4 m)",dwScrews:"Schrauben",dwCompound:"Spachtelmasse",
+insDesc:"Dämmvolumen und Rollen aus Fläche und Dicke.",
+insThick:"Dicke (mm)",rollCover:"Rollenabdeckung (m²)",insVol:"Dämmvolumen",insRolls:"Rollen",
+roofDesc:"Dachfläche mit Neigungskorrektur, Ziegel oder Bleche.",
+roofSlope:"Neigung (%)",roofType:"Eindeckung",rfTiles:"Ziegel (10/m²)",rfSheets:"Bleche",
+roofArea:"Dachfläche",rfTilesN:"Dachziegel",rfSheetsN:"Bleche",
+fenceDesc:"Pfähle und Drahtrollen für einen Umfang.",
+fencePerim:"Umfang (m)",postSpacing:"Pfahlabstand (m)",fencePosts:"Pfähle",meshRolls:"Drahtrollen (50 m)",
+projSelL:"Projekt",newProject:"+ Neu",del:"Löschen",
+thPrice:"Preis/Einh.",thTotal:"Gesamt",currencyL:"Währung",marginPct:"Marge (%)",grandTotal:"Gesamt",subtotal:"Zwischensumme",
+companyTitle:"Firma (für Angebote)",companyDesc:"Erscheint auf dem Angebots-PDF.",
+companyName:"Firmenname",companyPh:"z.B. Acme Bau",clientL:"Kunde",clientPh:"Kundenname",companyLogo:"Logo",
+priceDbTitle:"Preisdatenbank",priceDbDesc:"Standardpreise beim Hinzufügen zum Projekt. Jederzeit änderbar.",
+quoteBtn:"Angebots-PDF",shareBtn:"Link teilen",linkCopied:"Link in Zwischenablage kopiert.",sharedTag:"geteilt",msgImported:"Projekt aus Link importiert."};
+I18N.fr={cExcav:"Terrassement",cBeams:"Poutres acier",cDrywall:"Placoplâtre",cInsul:"Isolation",cRoof:"Toiture",cFence:"Clôture",
+excDesc:"Volume excavé, volume foisonné et rotations de camions.",
+exDepth:"Profondeur (m)",swellPct:"Foisonnement (%)",truckCap:"Capacité camion (m³)",
+excVol:"Volume excavé",looseVol:"Volume foisonné",truckLoads:"Rotations",
+beamsDesc:"Poids des profilés acier IPE / HEA / HEB.",
+thProfile:"Profilé",thLenM:"Longueur (m)",thPieces:"Pièces",totalWt:"Poids total",
+dwDesc:"Plaques, vis et enduit pour murs et plafonds.",
+dwBoards:"Plaques (1,2 × 2,4 m)",dwScrews:"Vis",dwCompound:"Enduit de joint",
+insDesc:"Volume d'isolant et rouleaux selon surface et épaisseur.",
+insThick:"Épaisseur (mm)",rollCover:"Couverture rouleau (m²)",insVol:"Volume d'isolant",insRolls:"Rouleaux",
+roofDesc:"Surface de toit avec correction de pente, tuiles ou tôles.",
+roofSlope:"Pente (%)",roofType:"Couverture",rfTiles:"Tuiles (10/m²)",rfSheets:"Tôles",
+roofArea:"Surface du toit",rfTilesN:"Tuiles",rfSheetsN:"Tôles",
+fenceDesc:"Poteaux et rouleaux de grillage pour un périmètre.",
+fencePerim:"Périmètre (m)",postSpacing:"Espacement poteaux (m)",fencePosts:"Poteaux",meshRolls:"Rouleaux grillage (50 m)",
+projSelL:"Projet",newProject:"+ Nouveau",del:"Supprimer",
+thPrice:"Prix/unit.",thTotal:"Total",currencyL:"Devise",marginPct:"Marge (%)",grandTotal:"Total",subtotal:"Sous-total",
+companyTitle:"Entreprise (pour devis)",companyDesc:"Apparaît sur le PDF de devis.",
+companyName:"Nom de l'entreprise",companyPh:"ex. Acme Bâtiment",clientL:"Client",clientPh:"Nom du client",companyLogo:"Logo",
+priceDbTitle:"Base de prix",priceDbDesc:"Prix par défaut à l'ajout au projet. Modifiables.",
+quoteBtn:"Devis PDF",shareBtn:"Partager le lien",linkCopied:"Lien copié.",sharedTag:"partagé",msgImported:"Projet importé depuis le lien."};
+I18N.es={cExcav:"Excavación",cBeams:"Vigas de acero",cDrywall:"Pladur",cInsul:"Aislamiento",cRoof:"Cubierta",cFence:"Vallado",
+excDesc:"Volumen excavado, volumen esponjado y viajes de camión.",
+exDepth:"Profundidad (m)",swellPct:"Esponjamiento (%)",truckCap:"Capacidad camión (m³)",
+excVol:"Volumen excavado",looseVol:"Volumen esponjado",truckLoads:"Viajes",
+beamsDesc:"Peso de perfiles de acero IPE / HEA / HEB.",
+thProfile:"Perfil",thLenM:"Longitud (m)",thPieces:"Piezas",totalWt:"Peso total",
+dwDesc:"Placas, tornillos y masilla para paredes y techos.",
+dwBoards:"Placas (1,2 × 2,4 m)",dwScrews:"Tornillos",dwCompound:"Masilla",
+insDesc:"Volumen de aislamiento y rollos según superficie y espesor.",
+insThick:"Espesor (mm)",rollCover:"Cobertura rollo (m²)",insVol:"Volumen aislamiento",insRolls:"Rollos",
+roofDesc:"Superficie de cubierta con corrección de pendiente, tejas o chapas.",
+roofSlope:"Pendiente (%)",roofType:"Cubrición",rfTiles:"Tejas (10/m²)",rfSheets:"Chapas",
+roofArea:"Superficie cubierta",rfTilesN:"Tejas",rfSheetsN:"Chapas",
+fenceDesc:"Postes y rollos de malla para un perímetro.",
+fencePerim:"Perímetro (m)",postSpacing:"Distancia postes (m)",fencePosts:"Postes",meshRolls:"Rollos de malla (50 m)",
+projSelL:"Proyecto",newProject:"+ Nuevo",del:"Eliminar",
+thPrice:"Precio/ud.",thTotal:"Total",currencyL:"Moneda",marginPct:"Margen (%)",grandTotal:"Total",subtotal:"Subtotal",
+companyTitle:"Empresa (para presupuestos)",companyDesc:"Aparece en el PDF del presupuesto.",
+companyName:"Nombre empresa",companyPh:"p.ej. Acme Obras",clientL:"Cliente",clientPh:"Nombre del cliente",companyLogo:"Logo",
+priceDbTitle:"Base de precios",priceDbDesc:"Precios por defecto al añadir al proyecto. Editables.",
+quoteBtn:"Presupuesto PDF",shareBtn:"Compartir enlace",linkCopied:"Enlace copiado.",sharedTag:"compartido",msgImported:"Proyecto importado desde el enlace."};
+I18N.it={cExcav:"Scavo",cBeams:"Travi in acciaio",cDrywall:"Cartongesso",cInsul:"Isolamento",cRoof:"Tetto",cFence:"Recinzione",
+excDesc:"Volume scavato, volume sciolto con rigonfiamento, viaggi camion.",
+exDepth:"Profondità (m)",swellPct:"Rigonfiamento (%)",truckCap:"Capacità camion (m³)",
+excVol:"Volume scavato",looseVol:"Volume sciolto",truckLoads:"Viaggi",
+beamsDesc:"Peso dei profilati in acciaio IPE / HEA / HEB.",
+thProfile:"Profilato",thLenM:"Lunghezza (m)",thPieces:"Pezzi",totalWt:"Peso totale",
+dwDesc:"Lastre, viti e stucco per pareti e soffitti.",
+dwBoards:"Lastre (1,2 × 2,4 m)",dwScrews:"Viti",dwCompound:"Stucco",
+insDesc:"Volume isolante e rotoli da superficie e spessore.",
+insThick:"Spessore (mm)",rollCover:"Copertura rotolo (m²)",insVol:"Volume isolante",insRolls:"Rotoli",
+roofDesc:"Superficie tetto con correzione pendenza, tegole o lamiere.",
+roofSlope:"Pendenza (%)",roofType:"Copertura",rfTiles:"Tegole (10/m²)",rfSheets:"Lamiere",
+roofArea:"Superficie tetto",rfTilesN:"Tegole",rfSheetsN:"Lamiere",
+fenceDesc:"Pali e rotoli di rete per un perimetro.",
+fencePerim:"Perimetro (m)",postSpacing:"Distanza pali (m)",fencePosts:"Pali",meshRolls:"Rotoli di rete (50 m)",
+projSelL:"Progetto",newProject:"+ Nuovo",del:"Elimina",
+thPrice:"Prezzo/un.",thTotal:"Totale",currencyL:"Valuta",marginPct:"Margine (%)",grandTotal:"Totale",subtotal:"Subtotale",
+companyTitle:"Azienda (per preventivi)",companyDesc:"Appare nel PDF del preventivo.",
+companyName:"Nome azienda",companyPh:"es. Acme Edilizia",clientL:"Cliente",clientPh:"Nome cliente",companyLogo:"Logo",
+priceDbTitle:"Database prezzi",priceDbDesc:"Prezzi predefiniti all'aggiunta al progetto. Modificabili.",
+quoteBtn:"Preventivo PDF",shareBtn:"Condividi link",linkCopied:"Link copiato.",sharedTag:"condiviso",msgImported:"Progetto importato dal link."};
+I18N.pt={cExcav:"Escavação",cBeams:"Vigas de aço",cDrywall:"Gesso cartonado",cInsul:"Isolamento",cRoof:"Telhado",cFence:"Vedação",
+excDesc:"Volume escavado, volume solto com empolamento, viagens de camião.",
+exDepth:"Profundidade (m)",swellPct:"Empolamento (%)",truckCap:"Capacidade camião (m³)",
+excVol:"Volume escavado",looseVol:"Volume solto",truckLoads:"Viagens",
+beamsDesc:"Peso de perfis de aço IPE / HEA / HEB.",
+thProfile:"Perfil",thLenM:"Comprimento (m)",thPieces:"Peças",totalWt:"Peso total",
+dwDesc:"Placas, parafusos e massa para paredes e tetos.",
+dwBoards:"Placas (1,2 × 2,4 m)",dwScrews:"Parafusos",dwCompound:"Massa de juntas",
+insDesc:"Volume de isolamento e rolos por área e espessura.",
+insThick:"Espessura (mm)",rollCover:"Cobertura rolo (m²)",insVol:"Volume isolamento",insRolls:"Rolos",
+roofDesc:"Área de telhado com correção de inclinação, telhas ou chapas.",
+roofSlope:"Inclinação (%)",roofType:"Cobertura",rfTiles:"Telhas (10/m²)",rfSheets:"Chapas",
+roofArea:"Área do telhado",rfTilesN:"Telhas",rfSheetsN:"Chapas",
+fenceDesc:"Postes e rolos de rede para um perímetro.",
+fencePerim:"Perímetro (m)",postSpacing:"Espaçamento postes (m)",fencePosts:"Postes",meshRolls:"Rolos de rede (50 m)",
+projSelL:"Projeto",newProject:"+ Novo",del:"Eliminar",
+thPrice:"Preço/un.",thTotal:"Total",currencyL:"Moeda",marginPct:"Margem (%)",grandTotal:"Total",subtotal:"Subtotal",
+companyTitle:"Empresa (para orçamentos)",companyDesc:"Aparece no PDF do orçamento.",
+companyName:"Nome da empresa",companyPh:"ex. Acme Obras",clientL:"Cliente",clientPh:"Nome do cliente",companyLogo:"Logótipo",
+priceDbTitle:"Base de preços",priceDbDesc:"Preços padrão ao adicionar ao projeto. Editáveis.",
+quoteBtn:"Orçamento PDF",shareBtn:"Partilhar link",linkCopied:"Link copiado.",sharedTag:"partilhado",msgImported:"Projeto importado do link."};
+I18N.nl={cExcav:"Grondwerk",cBeams:"Stalen balken",cDrywall:"Gipsplaten",cInsul:"Isolatie",cRoof:"Dak",cFence:"Hekwerk",
+excDesc:"Gegraven volume, los volume met zwelling, vrachtwagenritten.",
+exDepth:"Diepte (m)",swellPct:"Zwelling (%)",truckCap:"Capaciteit vrachtwagen (m³)",
+excVol:"Gegraven volume",looseVol:"Los volume",truckLoads:"Ritten",
+beamsDesc:"Gewicht van IPE / HEA / HEB staalprofielen.",
+thProfile:"Profiel",thLenM:"Lengte (m)",thPieces:"Stuks",totalWt:"Totaalgewicht",
+dwDesc:"Platen, schroeven en voegenvuller voor wanden en plafonds.",
+dwBoards:"Platen (1,2 × 2,4 m)",dwScrews:"Schroeven",dwCompound:"Voegenvuller",
+insDesc:"Isolatievolume en rollen uit oppervlakte en dikte.",
+insThick:"Dikte (mm)",rollCover:"Dekking rol (m²)",insVol:"Isolatievolume",insRolls:"Rollen",
+roofDesc:"Dakoppervlak met hellingscorrectie, dakpannen of platen.",
+roofSlope:"Helling (%)",roofType:"Bedekking",rfTiles:"Dakpannen (10/m²)",rfSheets:"Platen",
+roofArea:"Dakoppervlak",rfTilesN:"Dakpannen",rfSheetsN:"Platen",
+fenceDesc:"Palen en rollen gaas voor een omtrek.",
+fencePerim:"Omtrek (m)",postSpacing:"Paalafstand (m)",fencePosts:"Palen",meshRolls:"Rollen gaas (50 m)",
+projSelL:"Project",newProject:"+ Nieuw",del:"Verwijderen",
+thPrice:"Prijs/st.",thTotal:"Totaal",currencyL:"Valuta",marginPct:"Marge (%)",grandTotal:"Totaal",subtotal:"Subtotaal",
+companyTitle:"Bedrijf (voor offertes)",companyDesc:"Verschijnt op de offerte-PDF.",
+companyName:"Bedrijfsnaam",companyPh:"bijv. Acme Bouw",clientL:"Klant",clientPh:"Klantnaam",companyLogo:"Logo",
+priceDbTitle:"Prijzendatabase",priceDbDesc:"Standaardprijzen bij toevoegen aan project. Aanpasbaar.",
+quoteBtn:"Offerte PDF",shareBtn:"Link delen",linkCopied:"Link gekopieerd.",sharedTag:"gedeeld",msgImported:"Project geïmporteerd via link."};
+
 /* ================= core ================= */
 const $=id=>document.getElementById(id);
 const LSKEY='buildquant_v1';
@@ -488,7 +768,7 @@ function fmt(n,d){if(!isFinite(n))return'—';d=d==null?1:d;return Number(n).toL
 let toastT=null;
 function toast(m){const el=$('toast');el.textContent=m;el.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>el.classList.remove('show'),2600)}
 function showResult(id,rows){const el=$(id);el.innerHTML='<table>'+rows.map(r=>'<tr><td>'+esc(r[0])+'</td><td>'+esc(r[1])+'</td></tr>').join('')+'</table>';el.classList.add('show')}
-function addItems(items){items.forEach(it=>S.project.push({id:uid(),material:it[0],qty:it[1],unit:it[2]||''}));persist();renderProject();toast(t('addedToProject'))}
+/* addItems -> v2 */
 /* ---------- i18n + nav ---------- */
 function applyI18n(){
   document.documentElement.lang=LANG;
@@ -496,7 +776,7 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=t(e.getAttribute('data-i18n'))});
   document.querySelectorAll('[data-i18n-ph]').forEach(e=>{e.placeholder=t(e.getAttribute('data-i18n-ph'))});
   const s=$('langSel');s.innerHTML='';
-  ['en','el'].forEach(c=>{const o=document.createElement('option');o.value=c;o.textContent=c==='en'?'English':'Ελληνικά';if(c===LANG)o.selected=true;s.appendChild(o)});
+  LANGS12.forEach(l=>{const o=document.createElement('option');o.value=l.c;o.textContent=l.n;if(l.c===LANG)o.selected=true;s.appendChild(o)});
   document.querySelectorAll('#mainnav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===CUR));
 }
 let CUR='home';
@@ -549,7 +829,7 @@ function calcTiles(){const L=num($('tL').value),W=num($('tW').value);
   if(sv==='3060')ta=0.3*0.6;else{const s=num(sv)/100;ta=s*s}
   const w=1+num($('tWaste').value)/100, area=L*W;
   const tiles=Math.ceil(area/ta*w), adh=area*4, grout=area*0.5;
-  TL={tiles,adh,grout};
+  TL={tiles,adh,grout,area};
   showResult('tOut',[[t('tilesNeeded'),fmt(tiles,0)],[t('adhesiveKg'),fmt(adh,1)+' kg'],[t('groutKg'),fmt(grout,1)+' kg']]);
 }
 let AG=null;
@@ -572,59 +852,180 @@ function calcLumber(){
   LB={vol};showResult('lbOut',[[t('lumberVol'),fmt(vol,3)+' m³']]);
 }
 /* ================= project ================= */
-function renderProject(){const tb=$('pjBody');tb.innerHTML='';
-  $('pjName').value=S.projectName||'';
-  if(!S.project.length){tb.innerHTML='<tr><td colspan="4" class="muted">'+esc(t('listEmpty'))+'</td></tr>';return}
-  S.project.forEach(it=>{const tr=document.createElement('tr');
-    tr.innerHTML='<td>'+esc(it.material)+'</td><td><input type="text" value="'+esc(it.qty)+'" data-f="qty" style="width:110px"></td><td>'+esc(it.unit)+'</td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
-    tr.querySelector('[data-f="qty"]').addEventListener('input',e=>{it.qty=e.target.value;persist()});
-    tr.querySelector('[data-del]').onclick=()=>{S.project=S.project.filter(x=>x.id!==it.id);persist();renderProject()};
-    tb.appendChild(tr)})}
+/* renderProject -> v2 */
 function dl(name,content,mime){const b=new Blob([content],{type:mime||'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
-function exportCSV(){if(!S.project.length){toast(t('listEmpty'));return}
-  let h='material;quantity;unit\n';S.project.forEach(it=>{h+=[it.material,it.qty,it.unit].join(';')+'\n'});
+/* exportCSV -> v2 */
+/* exportPDF -> v2 */
+/* ================= v2: projects, pricing, extras ================= */
+const LANGS12=[{c:'en',n:'English'},{c:'el',n:'Ελληνικά'},{c:'de',n:'Deutsch'},{c:'fr',n:'Français'},{c:'es',n:'Español'},{c:'it',n:'Italiano'},{c:'pt',n:'Português'},{c:'nl',n:'Nederlands'},{c:'pl',n:'Polski'},{c:'tr',n:'Türkçe'},{c:'ar',n:'العربية'},{c:'ro',n:'Română'}];
+const MAT_PRICES=[
+ ['concrete_m3','Concrete','Σκυρόδεμα',95,'m³'],['cement_bag','Cement bag 50 kg','Τσουβάλι τσιμέντου 50 kg',8,'pcs'],
+ ['sand_t','Sand','Άμμος',28,'t'],['gravel_t','Gravel','Χαλίκι',24,'t'],
+ ['rebar_kg','Rebar','Οπλισμός',1.35,'kg'],['block_pc','Concrete block','Τσιμεντόλιθος',1.7,'pcs'],
+ ['brick_pc','Brick','Τούβλο',0.5,'pcs'],['mortar_m3','Mortar','Κονίαμα',140,'m³'],
+ ['paint_l','Paint','Μπογιά',6.5,'L'],['tile_m2','Tiles','Πλακάκια',14,'m²'],
+ ['adhesive_kg','Tile adhesive','Κόλλα πλακιδίων',1.6,'kg'],['grout_kg','Grout','Αρμόστοκος',3,'kg'],
+ ['agg_t','Aggregates','Αδρανή',22,'t'],['lumber_m3','Lumber','Ξυλεία',480,'m³'],
+ ['exc_m3','Excavation','Εκσκαφή',9,'m³'],['steel_kg','Structural steel','Δομικός χάλυβας',2.4,'kg'],
+ ['dw_board','Drywall board','Γυψοσανίδα',13,'pcs'],['compound_kg','Joint compound','Στόκος αρμών',2.2,'kg'],
+ ['ins_m2','Insulation','Μόνωση',9,'m²'],['roof_tile','Roof tile','Κεραμίδι',1.3,'pcs'],
+ ['roof_sheet','Metal sheet','Λαμαρίνα',19,'pcs'],['post_pc','Fence post','Πάσσαλος περίφραξης',9.5,'pcs'],
+ ['mesh_roll','Mesh roll 50 m','Ρολό πλέγματος 50 m',88,'roll']];
+function priceOf(k){if(S.prices&&S.prices[k]!=null&&S.prices[k]!=='')return num(S.prices[k]);const m=MAT_PRICES.find(x=>x[0]===k);return m?m[3]:0}
+function migrate(){
+  if(S.project&&!S.projects){S.projects=[{id:uid(),name:S.projectName||'Project 1',date:new Date().toISOString(),items:S.project.map(it=>({id:it.id||uid(),key:'',material:it.material,qty:num(it.qty),unit:it.unit,price:0}))}];S.curPid=S.projects[0].id;delete S.project;delete S.projectName}
+  if(!S.projects||!S.projects.length)S.projects=[{id:uid(),name:'Project 1',date:new Date().toISOString(),items:[]}];
+  if(!S.curPid)S.curPid=S.projects[0].id;
+  if(!S.prices)S.prices={};if(!S.company)S.company={name:'',client:'',logo:''};
+  if(S.currency==null)S.currency='€';if(S.margin==null)S.margin=0;
+}
+function cur(){let p=S.projects.find(x=>x.id===S.curPid);if(!p){p=S.projects[0];S.curPid=p.id}return p}
+function addItems(items){const p=cur();items.forEach(it=>p.items.push({id:uid(),key:it[3]||'',material:it[0],qty:num(it[1]),unit:it[2]||'',price:it[3]?priceOf(it[3]):0}));persist();renderProject();toast(t('addedToProject'))}
+function renderProject(){
+  const p=cur(),tb=$('pjBody');tb.innerHTML='';
+  $('pjName').value=p.name||'';renderPjSel();
+  if(!p.items.length){tb.innerHTML='<tr><td colspan="6" class="muted">'+esc(t('listEmpty'))+'</td></tr>'}
+  p.items.forEach(it=>{const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+esc(it.material)+'</td><td><input type="number" min="0" step="any" value="'+it.qty+'" data-f="qty" style="width:90px"></td><td>'+esc(it.unit)+'</td><td><input type="number" min="0" step="any" value="'+it.price+'" data-f="price" style="width:90px"></td><td class="num" data-tot></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+    const upd=()=>{it.qty=num(tr.querySelector('[data-f="qty"]').value);it.price=num(tr.querySelector('[data-f="price"]').value);tr.querySelector('[data-tot]').textContent=fmt(it.qty*it.price,2);persist();updateTotals()};
+    tr.querySelector('[data-f="qty"]').addEventListener('input',upd);
+    tr.querySelector('[data-f="price"]').addEventListener('input',upd);
+    tr.querySelector('[data-tot]').textContent=fmt(it.qty*it.price,2);
+    tr.querySelector('[data-del]').onclick=()=>{p.items=p.items.filter(x=>x.id!==it.id);persist();renderProject()};
+    tb.appendChild(tr)});
+  $('pjCur').value=S.currency||'€';$('pjMargin').value=S.margin||0;
+  $('coName').value=(S.company&&S.company.name)||'';$('coClient').value=(S.company&&S.company.client)||'';
+  renderPriceDb();updateTotals();
+}
+function updateTotals(){const p=cur();const sub=p.items.reduce((a,it)=>a+it.qty*it.price,0);const tot=sub*(1+num(S.margin)/100);
+  $('pjTotal').textContent=(S.currency||'€')+' '+fmt(tot,2);
+  $('pjSub').textContent=t('subtotal')+': '+(S.currency||'€')+' '+fmt(sub,2)}
+function renderPjSel(){const s=$('pjSel');if(!s)return;s.innerHTML='';S.projects.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=p.name||'—';if(p.id===S.curPid)o.selected=true;s.appendChild(o)})}
+function renderPriceDb(){const tb=$('pdbBody');if(!tb)return;tb.innerHTML='';
+  MAT_PRICES.forEach(m=>{const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+esc(LANG==='el'?m[2]:m[1])+'</td><td><input type="number" min="0" step="any" value="'+priceOf(m[0])+'" style="width:110px"></td><td>'+esc(m[4])+'</td>';
+    tr.querySelector('input').addEventListener('input',e=>{S.prices[m[0]]=num(e.target.value);persist()});
+    tb.appendChild(tr)})}
+function exportCSV(){const p=cur();if(!p.items.length){toast(t('listEmpty'));return}
+  let h='material;quantity;unit;price;total\n';p.items.forEach(it=>{h+=[it.material,it.qty,it.unit,it.price,(it.qty*it.price).toFixed(2)].join(';')+'\n'});
   dl('buildquant-project.csv',h,'text/csv');toast(t('msgExported'))}
-function exportPDF(){if(!S.project.length){toast(t('listEmpty'));return}
+function quotePDF(){const p=cur();if(!p.items.length){toast(t('listEmpty'));return}
   if(!(window.jspdf&&window.jspdf.jsPDF)){if(window.print)window.print();return}
-  const{jsPDF}=window.jspdf,doc=new jsPDF();let y=18;
-  doc.setFont('courier','bold');doc.setFontSize(16);doc.text('BuildQuant - Material List',10,y);y+=8;
-  doc.setFont('courier','normal');doc.setFontSize(11);
-  doc.text('Project: '+(S.projectName||'-'),10,y);y+=6;
-  doc.text('Date: '+new Date().toLocaleDateString('en-GB'),10,y);y+=8;
-  doc.setFont('courier','bold');doc.text('Material                    Quantity',10,y);y+=6;doc.setFont('courier','normal');
-  S.project.forEach(it=>{if(y>275){doc.addPage();y=18}
-    const lines=doc.splitTextToSize(it.material+'  —  '+it.qty+' '+it.unit,185);
-    doc.text(lines,10,y);y+=lines.length*6});
-  doc.save('buildquant-project.pdf');toast(t('msgExported'))}
+  const{jsPDF}=window.jspdf,doc=new jsPDF(),co=S.company||{},cur2=S.currency||'€';let y=16;
+  if(co.logo){try{doc.addImage(co.logo,'PNG',10,8,32,16)}catch(e){}}
+  doc.setFont('courier','bold');doc.setFontSize(18);doc.text(co.name||'BuildQuant',co.logo?48:10,20);
+  doc.setFontSize(11);doc.text('QUOTATION',10,30);doc.setFont('courier','normal');
+  doc.text('Project: '+(p.name||'-'),10,37);doc.text('Client: '+(co.client||'-'),10,43);
+  doc.text('Date: '+new Date().toLocaleDateString('en-GB'),10,49);y=58;
+  doc.setFont('courier','bold');doc.text('Material',10,y);doc.text('Qty',112,y);doc.text('Price',142,y);doc.text('Total',172,y);y+=6;
+  doc.setFont('courier','normal');
+  p.items.forEach(it=>{if(y>272){doc.addPage();y=18}
+    const mn=doc.splitTextToSize(String(it.material),96);
+    doc.text(mn,10,y);doc.text(String(it.qty)+' '+it.unit,112,y);
+    doc.text(cur2+' '+Number(it.price).toFixed(2),142,y);doc.text(cur2+' '+(it.qty*it.price).toFixed(2),172,y);
+    y+=Math.max(mn.length,1)*6});
+  y+=4;const sub=p.items.reduce((a,it)=>a+it.qty*it.price,0),tot=sub*(1+num(S.margin)/100);
+  doc.setFont('courier','bold');doc.text('Subtotal: '+cur2+' '+sub.toFixed(2),142,y);y+=7;
+  doc.text('Total'+(num(S.margin)?' (incl. '+S.margin+'% margin)':'')+': '+cur2+' '+tot.toFixed(2),142,y);
+  doc.save('buildquant-quote.pdf');toast(t('msgExported'))}
+function shareLink(){const p=cur();if(!p.items.length){toast(t('listEmpty'));return}
+  const data={n:p.name,items:p.items.map(it=>[it.material,it.qty,it.unit,it.price])};
+  const url=location.origin+location.pathname+'#p='+btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const done=()=>toast(t('linkCopied'));
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done).catch(()=>prompt('URL:',url));else prompt('URL:',url)}
+function importShared(){if(!location.hash.startsWith('#p='))return;try{
+  const data=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));
+  if(data&&data.items&&data.items.length){S.projects.push({id:uid(),name:(data.n||'Shared')+' ('+t('sharedTag')+')',date:new Date().toISOString(),items:data.items.map(a=>({id:uid(),key:'',material:String(a[0]),qty:num(a[1]),unit:String(a[2]||''),price:num(a[3])}))});S.curPid=S.projects[S.projects.length-1].id;persist();history.replaceState(null,'',location.pathname);renderProject();toast(t('msgImported'))}
+}catch(e){}}
+function setDark(d){S.dark=!!d;document.body.classList.toggle('dark',S.dark);persist()}
+/* ----- new calculators ----- */
+let EX=null;
+function calcExc(){const L=num($('exL').value),W=num($('exW').value),D=num($('exD').value);
+  if(!(L>0&&W>0&&D>0)){toast(t('msgInvalid'));return}
+  const vol=L*W*D,loose=vol*(1+num($('exSwell').value)/100),trucks=Math.ceil(loose/Math.max(num($('exTruck').value),0.1));
+  EX={loose,trucks};
+  showResult('exOut',[[t('excVol'),fmt(vol,2)+' m³'],[t('looseVol'),fmt(loose,2)+' m³'],[t('truckLoads'),fmt(trucks,0)]])}
+const PROFILES=[['IPE 80',6.0],['IPE 100',8.1],['IPE 120',10.4],['IPE 140',12.9],['IPE 160',15.8],['IPE 180',18.8],['IPE 200',22.4],['IPE 220',26.2],['IPE 240',30.7],['IPE 270',36.1],['IPE 300',42.2],['HEA 100',16.7],['HEA 120',19.9],['HEA 140',24.7],['HEA 160',30.4],['HEA 180',35.5],['HEA 200',42.3],['HEB 100',20.4],['HEB 120',26.7],['HEB 140',33.7],['HEB 160',42.6]];
+let BM=null;
+function renderBmRows(){const tb=$('bmBody');tb.innerHTML='';addBmRow()}
+function addBmRow(){const tb=$('bmBody');const tr=document.createElement('tr');
+  tr.innerHTML='<td><select data-f="p">'+PROFILES.map(p=>'<option value="'+p[1]+'">'+p[0]+' — '+p[1]+' kg/m</option>').join('')+'</select></td><td><input type="number" min="0" step="any" value="6" data-f="len"></td><td><input type="number" min="0" step="1" value="2" data-f="qty"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+  tr.querySelector('[data-del]').onclick=()=>tr.remove();tb.appendChild(tr)}
+function calcBeams(){const rows=[...document.querySelectorAll('#bmBody tr')];if(!rows.length){toast(t('msgInvalid'));return}
+  let tot=0;const det=[];
+  rows.forEach(tr=>{const kgm=num(tr.querySelector('[data-f="p"]').value),len=num(tr.querySelector('[data-f="len"]').value),qty=Math.round(num(tr.querySelector('[data-f="qty"]').value));
+    if(len>0&&qty>0){const w=kgm*len*qty;tot+=w;det.push({p:tr.querySelector('[data-f="p"]').selectedOptions[0].textContent.split(' — ')[0],w})}});
+  if(!det.length){toast(t('msgInvalid'));return}
+  BM={det,tot};
+  showResult('bmOut',det.map(d=>[d.p,fmt(d.w,1)+' kg']).concat([[t('totalWt'),fmt(tot,1)+' kg ('+fmt(tot/1000,2)+' t)']]))}
+let DW=null;
+function calcDrywall(){const A=num($('dwArea').value);if(!(A>0)){toast(t('msgInvalid'));return}
+  const w=1+num($('dwWaste').value)/100,boards=Math.ceil(A/2.88*w),screws=Math.ceil(A*12),compound=A*0.5;
+  DW={boards,compound};
+  showResult('dwOut',[[t('dwBoards'),fmt(boards,0)],[t('dwScrews'),fmt(screws,0)],[t('dwCompound'),fmt(compound,1)+' kg']])}
+let IN2=null;
+function calcInsul(){const A=num($('inArea').value),th=num($('inThick').value);if(!(A>0&&th>0)){toast(t('msgInvalid'));return}
+  const vol=A*th/1000,rolls=Math.ceil(A/Math.max(num($('inRoll').value),0.1));
+  IN2={vol,rolls,area:A};
+  showResult('inOut',[[t('insVol'),fmt(vol,2)+' m³'],[t('insRolls'),fmt(rolls,0)]])}
+let RF=null;
+function calcRoof(){const L=num($('rfL').value),W=num($('rfW').value);if(!(L>0&&W>0)){toast(t('msgInvalid'));return}
+  const area=L*W*(1+num($('rfSlope').value)/100),type=$('rfType').value;let main;
+  if(type==='tiles'){const n=Math.ceil(area*10*1.05);RF={type,n};main=[t('rfTilesN'),fmt(n,0)]}
+  else{const n=Math.ceil(area/1.8*1.05);RF={type,n};main=[t('rfSheetsN'),fmt(n,0)]}
+  showResult('rfOut',[[t('roofArea'),fmt(area,1)+' m²'],main])}
+let FE=null;
+function calcFence(){const P=num($('fePerim').value),sp=Math.max(num($('feSpacing').value),0.1);
+  if(!(P>0)){toast(t('msgInvalid'));return}
+  const posts=Math.ceil(P/sp)+1,rolls=Math.ceil(P/50);
+  FE={posts,rolls};
+  showResult('feOut',[[t('fencePosts'),fmt(posts,0)],[t('meshRolls'),fmt(rolls,0)]])}
+
 /* ================= init ================= */
 function init(){
   const sv=load();if(sv){S=Object.assign(S,sv)}
   LANG=(S.lang&&I18N[S.lang])?S.lang:'en';S.lang=LANG;
-  renderRbRows();renderLbRows();renderProject();applyI18n();show('home');
+  migrate();renderRbRows();renderLbRows();renderBmRows();renderProject();applyI18n();importShared();setDark(S.dark);show('home');
   $('langSel').addEventListener('change',e=>{LANG=e.target.value;S.lang=LANG;persist();applyI18n();toast(t('msgLang'))});
   document.querySelectorAll('#calcTabs button').forEach(b=>b.addEventListener('click',()=>{
     document.querySelectorAll('#calcTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
     document.querySelectorAll('.calc').forEach(c=>c.classList.remove('active'));$('c-'+b.dataset.calc).classList.add('active')}));
   $('ccGo').onclick=calcConcrete;
-  $('ccAdd').onclick=()=>{if(!CC){toast(t('msgInvalid'));return}addItems([[t('cConcrete'),fmt(CC.vol,2),'m³'],[t('cementBags'),fmt(CC.bags,1),'pcs'],[t('sandT'),fmt(CC.sandT,2),'t'],[t('gravelT'),fmt(CC.gravT,2),'t']])};
+  $('ccAdd').onclick=()=>{if(!CC){toast(t('msgInvalid'));return}addItems([[t('cConcrete'),fmt(CC.vol,2),'m³','concrete_m3'],[t('cementBags'),fmt(CC.bags,1),'pcs','cement_bag'],[t('sandT'),fmt(CC.sandT,2),'t','sand_t'],[t('gravelT'),fmt(CC.gravT,2),'t','gravel_t']])};
   $('rbAdd').onclick=()=>renderRbRows([...rbRows(),{dia:12,len:100}]);
   $('rbGo').onclick=calcRebar;
-  $('rbAddP').onclick=()=>{if(!RB){toast(t('msgInvalid'));return}addItems(RB.det.map(d=>['Rebar Φ'+d.d,fmt(d.w,1),'kg']))};
+  $('rbAddP').onclick=()=>{if(!RB){toast(t('msgInvalid'));return}addItems(RB.det.map(d=>['Rebar Φ'+d.d,fmt(d.w,1),'kg','rebar_kg']))};
   $('wGo').onclick=calcWall;
-  $('wAdd').onclick=()=>{if(!WL){toast(t('msgInvalid'));return}addItems([[(WL.type==='block'?'Blocks':'Bricks'),fmt(WL.units,0),'pcs'],[t('mortarM3'),fmt(WL.mortar,2),'m³']])};
+  $('wAdd').onclick=()=>{if(!WL){toast(t('msgInvalid'));return}addItems([[(WL.type==='block'?'Blocks':'Bricks'),fmt(WL.units,0),'pcs',WL.type==='block'?'block_pc':'brick_pc'],[t('mortarM3'),fmt(WL.mortar,2),'m³','mortar_m3']])};
   $('pGo').onclick=calcPaint;
-  $('pAdd').onclick=()=>{if(!PT){toast(t('msgInvalid'));return}addItems([[t('cPaint'),fmt(PT.L,1),'L']])};
+  $('pAdd').onclick=()=>{if(!PT){toast(t('msgInvalid'));return}addItems([[t('cPaint'),fmt(PT.L,1),'L','paint_l']])};
   $('tGo').onclick=calcTiles;
-  $('tAdd').onclick=()=>{if(!TL){toast(t('msgInvalid'));return}addItems([[t('cTiles'),fmt(TL.tiles,0),'pcs'],[t('adhesiveKg'),fmt(TL.adh,1),'kg']])};
+  $('tAdd').onclick=()=>{if(!TL){toast(t('msgInvalid'));return}addItems([[t('cTiles'),fmt(TL.area,1),'m²','tile_m2'],[t('adhesiveKg'),fmt(TL.adh,1),'kg','adhesive_kg']])};
   $('aGo').onclick=calcAgg;
-  $('aAdd').onclick=()=>{if(!AG){toast(t('msgInvalid'));return}addItems([[AG.name.split(' (')[0],fmt(AG.tonnes,2),'t']])};
+  $('aAdd').onclick=()=>{if(!AG){toast(t('msgInvalid'));return}addItems([[AG.name.split(' (')[0],fmt(AG.tonnes,2),'t','agg_t']])};
   $('lbAdd').onclick=()=>{const tb=$('lbBody');const tr=document.createElement('tr');tr.innerHTML='<td><input type="number" min="0" step="1" value="10" data-f="pcs"></td><td><input type="text" value="50x100" data-f="sec"></td><td><input type="number" min="0" step="any" value="4" data-f="len"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';tr.querySelector('[data-del]').onclick=()=>tr.remove();tb.appendChild(tr)};
   $('lbGo').onclick=calcLumber;
-  $('lbAddP').onclick=()=>{if(!LB){toast(t('msgInvalid'));return}addItems([[t('cLumber'),fmt(LB.vol,3),'m³']])};
-  $('pjName').addEventListener('input',e=>{S.projectName=e.target.value;persist()});
-  $('pjCsv').onclick=exportCSV;$('pjPdf').onclick=exportPDF;
+  $('lbAddP').onclick=()=>{if(!LB){toast(t('msgInvalid'));return}addItems([[t('cLumber'),fmt(LB.vol,3),'m³','lumber_m3']])};
+  $('pjName').addEventListener('input',e=>{cur().name=e.target.value;persist();renderPjSel()});
+  $('pjCsv').onclick=exportCSV;$('pjQuote').onclick=quotePDF;$('pjShare').onclick=shareLink;
   $('pjPrint').onclick=()=>window.print();
-  $('pjClear').onclick=()=>{if(confirm(t('confirmDelete'))){S.project=[];persist();renderProject();toast(t('listCleared'))}};
+  $('pjClear').onclick=()=>{if(confirm(t('confirmDelete'))){cur().items=[];persist();renderProject();toast(t('listCleared'))}};
+    $('pjSel').onchange=e=>{S.curPid=e.target.value;persist();renderProject()};
+  $('pjNew').onclick=()=>{S.projects.push({id:uid(),name:'Project '+S.projects.length,date:new Date().toISOString(),items:[]});S.curPid=S.projects[S.projects.length-1].id;persist();renderProject()};
+  $('pjDel').onclick=()=>{if(S.projects.length<=1){toast(t('msgInvalid'));return}if(confirm(t('confirmDelete'))){S.projects=S.projects.filter(x=>x.id!==S.curPid);S.curPid=S.projects[0].id;persist();renderProject()}};
+  $('pjCur').onchange=e=>{S.currency=e.target.value;persist();updateTotals()};
+  $('pjMargin').addEventListener('input',e=>{S.margin=num(e.target.value);persist();updateTotals()});
+  $('coName').addEventListener('input',e=>{S.company.name=e.target.value;persist()});
+  $('coClient').addEventListener('input',e=>{S.company.client=e.target.value;persist()});
+  $('coLogo').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{S.company.logo=rd.result;persist();toast(t('msgExported'))};rd.readAsDataURL(f)});
+  $('darkBtn').onclick=()=>setDark(!S.dark);
+  $('exGo').onclick=calcExc;$('exAdd').onclick=()=>{if(!EX){toast(t('msgInvalid'));return}addItems([[t('cExcav')+' ('+t('looseVol')+')',fmt(EX.loose,2),'m³','exc_m3']])};
+  $('bmAddRow').onclick=addBmRow;$('bmGo').onclick=calcBeams;
+  $('bmAddP').onclick=()=>{if(!BM){toast(t('msgInvalid'));return}addItems(BM.det.map(d=>['Steel '+d.p,fmt(d.w,1),'kg','steel_kg']))};
+  $('dwGo').onclick=calcDrywall;$('dwAdd').onclick=()=>{if(!DW){toast(t('msgInvalid'));return}addItems([[t('dwBoards'),fmt(DW.boards,0),'pcs','dw_board'],[t('dwCompound'),fmt(DW.compound,1),'kg','compound_kg']])};
+  $('inGo').onclick=calcInsul;$('inAdd').onclick=()=>{if(!IN2){toast(t('msgInvalid'));return}addItems([[t('cInsul')+' '+num($('inThick').value)+'mm',fmt(IN2.area,1),'m²','ins_m2']])};
+  $('rfGo').onclick=calcRoof;$('rfAdd').onclick=()=>{if(!RF){toast(t('msgInvalid'));return}addItems([[RF.type==='tiles'?t('rfTilesN'):t('rfSheetsN'),fmt(RF.n,0),'pcs',RF.type==='tiles'?'roof_tile':'roof_sheet']])};
+  $('feGo').onclick=calcFence;$('feAdd').onclick=()=>{if(!FE){toast(t('msgInvalid'));return}addItems([[t('fencePosts'),fmt(FE.posts,0),'pcs','post_pc'],[t('meshRolls'),fmt(FE.rolls,0),'roll','mesh_roll']])};
   $('notifyBtn').onclick=()=>toast(t('msgNotifyThanks'));
 }
 document.addEventListener('DOMContentLoaded',init);
