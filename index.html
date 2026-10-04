@@ -11,6 +11,9 @@
 <meta property="og:type" content="website">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23166b4d'/%3E%3Cpath d='M9 22V14l7-5 7 5v8' stroke='white' stroke-width='2.6' fill='none'/%3E%3Cpath d='M13 22v-5h6v5' stroke='white' stroke-width='2.2' fill='none'/%3E%3C/svg%3E">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+<link rel="manifest" href='data:application/manifest+json,{"name":"BuildQuant","short_name":"BuildQuant","start_url":".","display":"standalone","background_color":"%23eef1ee","theme_color":"%23166b4d","icons":[{"src":"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='96' fill='%23166b4d'/%3E%3Cpath d='M144 352V224l112-80 112 80v128' stroke='white' stroke-width='42' fill='none'/%3E%3Cpath d='M208 352v-80h96v80' stroke='white' stroke-width='36' fill='none'/%3E%3C/svg%3E","sizes":"512x512","type":"image/svg+xml"}]}'>
+<meta name="theme-color" content="#166b4d">
 <style>
 :root{
   --bg:#eef1ee; --card:#ffffff; --ink:#1a2420; --muted:#5f6f65; --line:#d9e0d9;
@@ -127,6 +130,24 @@ body.dark .calctabs button{background:#232d27;border-color:#2c382f}
 body.dark .apphead{background:#182019}
 body.dark .faq details{background:#1c241f}
 body.dark .section[style]{background:#182019!important}
+
+/* ---------- v3 additions ---------- */
+.modal{position:fixed;inset:0;background:rgba(15,25,20,.55);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-box{background:var(--card);border-radius:14px;padding:24px;max-width:420px;width:100%;box-shadow:var(--sh)}
+.dashgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:22px}
+.dashcard{background:var(--card);border-radius:var(--r);box-shadow:var(--sh);padding:18px}
+.dashcard .n{font-size:26px;font-weight:800}
+.dashcard .l{color:var(--muted);font-size:13px;margin-top:4px}
+.bar-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+.bar-row .bl{width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
+.bar-row .bt{flex:1;background:var(--bg);border-radius:6px;height:18px;position:relative}
+.bar-row .bf{position:absolute;inset:0 auto 0 0;background:var(--brand);border-radius:6px}
+.bar-row .bv{width:110px;text-align:right;font-size:13px;font-weight:700}
+td.cheap{background:#e3f3e9!important;font-weight:700}
+body.dark td.cheap{background:#1d3a28!important}
+body.dark .modal-box{background:#1c241f}
+body.dark .bar-row .bt{background:#232d27}
+@media print{.no-print,#shareModal{display:none!important}}
 </style>
 </head>
 <body>
@@ -137,9 +158,13 @@ body.dark .section[style]{background:#182019!important}
       <button data-nav="home" data-i18n="navHome">Home</button>
       <button data-nav="calcs" data-i18n="navCalcs">Calculators</button>
       <button data-nav="project" data-i18n="navProject">Project</button>
-      <button data-nav="pricing" data-i18n="navPricing">Pricing</button>
+      <button data-nav="suppliers" data-i18n="navSuppliers">Suppliers</button>
+  <button data-nav="dashboard" data-i18n="navDashboard">Dashboard</button>
+  <button data-nav="settings" data-i18n="navSettings">Settings</button>
+  <button data-nav="pricing" data-i18n="navPricing">Pricing</button>
     </nav>
     <div class="bar-cta">
+      <button class="btn btn-ghost btn-sm" id="unitBtn" title="Metric / Imperial">m/ft</button>
       <button class="btn btn-ghost btn-sm" id="darkBtn" title="Dark mode">◐</button>
       <select id="langSel" aria-label="Language"></select>
       <button class="btn btn-primary btn-sm" data-nav="calcs" data-i18n="openApp">Open app</button>
@@ -254,15 +279,20 @@ body.dark .section[style]{background:#182019!important}
       <button data-calc="insul" data-i18n="cInsul">Insulation</button>
       <button data-calc="roof" data-i18n="cRoof">Roofing</button>
       <button data-calc="fence" data-i18n="cFence">Fencing</button>
+      <button data-calc="plaster" data-i18n="cPlaster">Plaster</button>
+      <button data-calc="screed" data-i18n="cScreed">Screed</button>
+      <button data-calc="stairs" data-i18n="cStairs">Stairs</button>
+      <button data-calc="tank" data-i18n="cTank">Tank / Pool</button>
+      <button data-calc="readymix" data-i18n="cReadymix">Ready-mix</button>
     </div>
 
     <div class="calc active" id="c-concrete"><div class="panel">
       <h3 data-i18n="cConcrete">Concrete</h3><p class="desc" data-i18n="concreteDesc">Slab, column or strip footing — volume, cement, sand, gravel, water.</p>
       <div class="formgrid">
         <div class="fg"><label data-i18n="shape">Shape</label><select id="ccShape"><option value="slab" data-i18n="shSlab">Slab</option><option value="column" data-i18n="shColumn">Column</option><option value="footing" data-i18n="shFooting">Strip footing</option></select></div>
-        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="ccL" type="number" min="0" step="any" value="5"></div>
-        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="ccW" type="number" min="0" step="any" value="4"></div>
-        <div class="fg"><label data-i18n="dimT">Thickness / height (m)</label><input id="ccT" type="number" min="0" step="any" value="0.2"></div>
+        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="ccL" data-u="m" type="number" min="0" step="any" value="5"></div>
+        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="ccW" data-u="m" type="number" min="0" step="any" value="4"></div>
+        <div class="fg"><label data-i18n="dimT">Thickness / height (m)</label><input id="ccT" data-u="m" type="number" min="0" step="any" value="0.2"></div>
         <div class="fg"><label data-i18n="mixRatio">Mix ratio (cement:sand:gravel)</label><select id="ccMix"><option value="1:2:4">1 : 2 : 4</option><option value="1:2:3">1 : 2 : 3</option><option value="1:3:6">1 : 3 : 6</option></select></div>
         <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="ccWaste" type="number" min="0" step="1" value="5"></div>
       </div>
@@ -272,7 +302,7 @@ body.dark .section[style]{background:#182019!important}
 
     <div class="calc" id="c-rebar"><div class="panel">
       <h3 data-i18n="cRebar">Rebar</h3><p class="desc" data-i18n="rebarDesc">Weight per diameter and 12 m bars to order.</p>
-      <table class="data"><thead><tr><th data-i18n="diaCol">Diameter</th><th data-i18n="totLenM">Total length (m)</th><th></th></tr></thead><tbody id="rbBody"></tbody></table>
+      <table class="data"><thead><tr><th data-i18n="diaCol">Diameter</th><th data-i18n="totLenM" data-ul="m">Total length (m)</th><th></th></tr></thead><tbody id="rbBody"></tbody></table>
       <div class="row-actions"><button class="btn btn-ghost btn-sm" id="rbAdd" data-i18n="addRow">+ Add row</button><button class="btn btn-primary btn-sm" id="rbGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="rbAddP" data-i18n="addToProject">Add to project</button></div>
       <div class="resultbox" id="rbOut"></div>
     </div></div>
@@ -280,10 +310,10 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-wall"><div class="panel">
       <h3 data-i18n="cWall">Bricks &amp; blocks</h3><p class="desc" data-i18n="wallDesc">Masonry units and mortar for a wall.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="wallL">Wall length (m)</label><input id="wL" type="number" min="0" step="any" value="10"></div>
-        <div class="fg"><label data-i18n="wallH">Wall height (m)</label><input id="wH" type="number" min="0" step="any" value="3"></div>
+        <div class="fg"><label data-i18n="wallL">Wall length (m)</label><input id="wL" data-u="m" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="wallH">Wall height (m)</label><input id="wH" data-u="m" type="number" min="0" step="any" value="3"></div>
         <div class="fg"><label data-i18n="unitType">Unit type</label><select id="wType"><option value="block" data-i18n="uBlock">Concrete block 390×190×190</option><option value="brick" data-i18n="uBrick">Brick 250×120×65</option></select></div>
-        <div class="fg"><label data-i18n="openArea">Openings area (m²)</label><input id="wOpen" type="number" min="0" step="any" value="0"></div>
+        <div class="fg"><label data-i18n="openArea">Openings area (m²)</label><input id="wOpen" data-u="m2" type="number" min="0" step="any" value="0"></div>
         <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="wWaste" type="number" min="0" step="1" value="5"></div>
       </div>
       <div class="row-actions"><button class="btn btn-primary btn-sm" id="wGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="wAdd" data-i18n="addToProject">Add to project</button></div>
@@ -293,7 +323,7 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-paint"><div class="panel">
       <h3 data-i18n="cPaint">Paint</h3><p class="desc" data-i18n="paintDesc">Litres and cans for walls.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="paintArea">Area to paint (m²)</label><input id="pArea" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="paintArea">Area to paint (m²)</label><input id="pArea" data-u="m2" type="number" min="0" step="any" value="50"></div>
         <div class="fg"><label data-i18n="coverage">Coverage (m²/litre)</label><input id="pCov" type="number" min="0" step="any" value="10"></div>
         <div class="fg"><label data-i18n="coats">Coats</label><input id="pCoats" type="number" min="1" step="1" value="2"></div>
       </div>
@@ -304,8 +334,8 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-tiles"><div class="panel">
       <h3 data-i18n="cTiles">Tiles</h3><p class="desc" data-i18n="tilesDesc">Tiles, adhesive and grout for floors.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="floorL">Floor length (m)</label><input id="tL" type="number" min="0" step="any" value="5"></div>
-        <div class="fg"><label data-i18n="floorW">Floor width (m)</label><input id="tW" type="number" min="0" step="any" value="4"></div>
+        <div class="fg"><label data-i18n="floorL">Floor length (m)</label><input id="tL" data-u="m" type="number" min="0" step="any" value="5"></div>
+        <div class="fg"><label data-i18n="floorW">Floor width (m)</label><input id="tW" data-u="m" type="number" min="0" step="any" value="4"></div>
         <div class="fg"><label data-i18n="tileSize">Tile size (cm)</label><select id="tSize"><option value="30">30 × 30</option><option value="45">45 × 45</option><option value="60" selected>60 × 60</option><option value="3060">30 × 60</option></select></div>
         <div class="fg"><label data-i18n="wastePct">Cutting waste (%)</label><input id="tWaste" type="number" min="0" step="1" value="10"></div>
       </div>
@@ -317,7 +347,7 @@ body.dark .section[style]{background:#182019!important}
       <h3 data-i18n="cAgg">Aggregates</h3><p class="desc" data-i18n="aggDesc">Volume to weight for sand, gravel and crushed stone.</p>
       <div class="formgrid">
         <div class="fg"><label data-i18n="aggType">Material</label><select id="aType"><option value="1.6" data-i18n="aSand">Sand (1.6 t/m³)</option><option value="1.5" data-i18n="aGravel">Gravel (1.5 t/m³)</option><option value="1.55" data-i18n="aCrushed">Crushed stone (1.55 t/m³)</option></select></div>
-        <div class="fg"><label data-i18n="volM3">Volume (m³)</label><input id="aVol" type="number" min="0" step="any" value="5"></div>
+        <div class="fg"><label data-i18n="volM3">Volume (m³)</label><input id="aVol" data-u="m3" type="number" min="0" step="any" value="5"></div>
         <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="aWaste" type="number" min="0" step="1" value="5"></div>
       </div>
       <div class="row-actions"><button class="btn btn-primary btn-sm" id="aGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="aAdd" data-i18n="addToProject">Add to project</button></div>
@@ -326,7 +356,7 @@ body.dark .section[style]{background:#182019!important}
 
     <div class="calc" id="c-lumber"><div class="panel">
       <h3 data-i18n="cLumber">Lumber</h3><p class="desc" data-i18n="lumberDesc">Timber volume from piece dimensions.</p>
-      <table class="data"><thead><tr><th data-i18n="thPieces">Pieces</th><th data-i18n="thSection">Section W×H (mm)</th><th data-i18n="thLenM">Length (m)</th><th></th></tr></thead><tbody id="lbBody"></tbody></table>
+      <table class="data"><thead><tr><th data-i18n="thPieces">Pieces</th><th data-i18n="thSection">Section W×H (mm)</th><th data-i18n="thLenM" data-ul="m">Length (m)</th><th></th></tr></thead><tbody id="lbBody"></tbody></table>
       <div class="row-actions"><button class="btn btn-ghost btn-sm" id="lbAdd" data-i18n="addRow">+ Add row</button><button class="btn btn-primary btn-sm" id="lbGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="lbAddP" data-i18n="addToProject">Add to project</button></div>
       <div class="resultbox" id="lbOut"></div>
     </div></div>
@@ -336,11 +366,11 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-excav"><div class="panel">
       <h3 data-i18n="cExcav">Excavation</h3><p class="desc" data-i18n="excDesc">Dug volume, loose volume with swell, truck loads.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="exL" type="number" min="0" step="any" value="10"></div>
-        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="exW" type="number" min="0" step="any" value="8"></div>
-        <div class="fg"><label data-i18n="exDepth">Depth (m)</label><input id="exD" type="number" min="0" step="any" value="1.5"></div>
+        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="exL" data-u="m" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="exW" data-u="m" type="number" min="0" step="any" value="8"></div>
+        <div class="fg"><label data-i18n="exDepth">Depth (m)</label><input id="exD" data-u="m" type="number" min="0" step="any" value="1.5"></div>
         <div class="fg"><label data-i18n="swellPct">Swell (%)</label><input id="exSwell" type="number" min="0" step="1" value="25"></div>
-        <div class="fg"><label data-i18n="truckCap">Truck capacity (m³)</label><input id="exTruck" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="truckCap">Truck capacity (m³)</label><input id="exTruck" data-u="m3" type="number" min="0" step="any" value="10"></div>
       </div>
       <div class="row-actions"><button class="btn btn-primary btn-sm" id="exGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="exAdd" data-i18n="addToProject">Add to project</button></div>
       <div class="resultbox" id="exOut"></div>
@@ -348,7 +378,7 @@ body.dark .section[style]{background:#182019!important}
 
     <div class="calc" id="c-beams"><div class="panel">
       <h3 data-i18n="cBeams">Steel beams</h3><p class="desc" data-i18n="beamsDesc">Weight of IPE / HEA / HEB profiles.</p>
-      <table class="data"><thead><tr><th data-i18n="thProfile">Profile</th><th data-i18n="thLenM">Length (m)</th><th data-i18n="thPieces">Pieces</th><th></th></tr></thead><tbody id="bmBody"></tbody></table>
+      <table class="data"><thead><tr><th data-i18n="thProfile">Profile</th><th data-i18n="thLenM" data-ul="m">Length (m)</th><th data-i18n="thPieces">Pieces</th><th></th></tr></thead><tbody id="bmBody"></tbody></table>
       <div class="row-actions"><button class="btn btn-ghost btn-sm" id="bmAddRow" data-i18n="addRow">+ Add row</button><button class="btn btn-primary btn-sm" id="bmGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="bmAddP" data-i18n="addToProject">Add to project</button></div>
       <div class="resultbox" id="bmOut"></div>
     </div></div>
@@ -356,7 +386,7 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-drywall"><div class="panel">
       <h3 data-i18n="cDrywall">Drywall</h3><p class="desc" data-i18n="dwDesc">Boards, screws and joint compound for walls/ceilings.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="dwArea" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="dwArea" data-u="m2" type="number" min="0" step="any" value="50"></div>
         <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="dwWaste" type="number" min="0" step="1" value="10"></div>
       </div>
       <div class="row-actions"><button class="btn btn-primary btn-sm" id="dwGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="dwAdd" data-i18n="addToProject">Add to project</button></div>
@@ -366,8 +396,8 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-insul"><div class="panel">
       <h3 data-i18n="cInsul">Insulation</h3><p class="desc" data-i18n="insDesc">Volume and rolls from area and thickness.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="inArea" type="number" min="0" step="any" value="50"></div>
-        <div class="fg"><label data-i18n="insThick">Thickness (mm)</label><input id="inThick" type="number" min="0" step="any" value="100"></div>
+        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="inArea" data-u="m2" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="insThick">Thickness (mm)</label><input id="inThick" data-u="mm" type="number" min="0" step="any" value="100"></div>
         <div class="fg"><label data-i18n="rollCover">Roll coverage (m²)</label><input id="inRoll" type="number" min="0" step="any" value="10"></div>
       </div>
       <div class="row-actions"><button class="btn btn-primary btn-sm" id="inGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="inAdd" data-i18n="addToProject">Add to project</button></div>
@@ -377,8 +407,8 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-roof"><div class="panel">
       <h3 data-i18n="cRoof">Roofing</h3><p class="desc" data-i18n="roofDesc">Roof area with slope, tiles or metal sheets.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="rfL" type="number" min="0" step="any" value="10"></div>
-        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="rfW" type="number" min="0" step="any" value="8"></div>
+        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="rfL" data-u="m" type="number" min="0" step="any" value="10"></div>
+        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="rfW" data-u="m" type="number" min="0" step="any" value="8"></div>
         <div class="fg"><label data-i18n="roofSlope">Slope (%)</label><input id="rfSlope" type="number" min="0" step="any" value="30"></div>
         <div class="fg"><label data-i18n="roofType">Covering</label><select id="rfType"><option value="tiles" data-i18n="rfTiles">Tiles (10/m²)</option><option value="sheets" data-i18n="rfSheets">Metal sheets</option></select></div>
       </div>
@@ -389,11 +419,68 @@ body.dark .section[style]{background:#182019!important}
     <div class="calc" id="c-fence"><div class="panel">
       <h3 data-i18n="cFence">Fencing</h3><p class="desc" data-i18n="fenceDesc">Posts and mesh rolls for a perimeter.</p>
       <div class="formgrid">
-        <div class="fg"><label data-i18n="fencePerim">Perimeter (m)</label><input id="fePerim" type="number" min="0" step="any" value="100"></div>
-        <div class="fg"><label data-i18n="postSpacing">Post spacing (m)</label><input id="feSpacing" type="number" min="0" step="any" value="2.5"></div>
+        <div class="fg"><label data-i18n="fencePerim">Perimeter (m)</label><input id="fePerim" data-u="m" type="number" min="0" step="any" value="100"></div>
+        <div class="fg"><label data-i18n="postSpacing">Post spacing (m)</label><input id="feSpacing" data-u="m" type="number" min="0" step="any" value="2.5"></div>
       </div>
       <div class="row-actions"><button class="btn btn-primary btn-sm" id="feGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="feAdd" data-i18n="addToProject">Add to project</button></div>
       <div class="resultbox" id="feOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-plaster"><div class="panel">
+      <h3 data-i18n="cPlaster">Plaster</h3><p class="desc" data-i18n="plasterDesc">Dry plaster mix for walls.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="plArea" data-u="m2" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="plThick">Thickness (mm)</label><input id="plThick" data-u="mm" type="number" min="0" step="any" value="15"></div>
+        <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="plWaste" type="number" min="0" step="1" value="10"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="plGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="plAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="plOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-screed"><div class="panel">
+      <h3 data-i18n="cScreed">Floor screed</h3><p class="desc" data-i18n="screedDesc">Cement screed 1:4 for floors.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="dwArea">Area (m²)</label><input id="scArea" data-u="m2" type="number" min="0" step="any" value="40"></div>
+        <div class="fg"><label data-i18n="scThick">Thickness (mm)</label><input id="scThick" data-u="mm" type="number" min="0" step="any" value="50"></div>
+        <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="scWaste" type="number" min="0" step="1" value="10"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="scGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="scAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="scOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-stairs"><div class="panel">
+      <h3 data-i18n="cStairs">Stairs</h3><p class="desc" data-i18n="stairsDesc">Concrete for a straight staircase.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="stSteps">Steps</label><input id="stN" type="number" min="1" step="1" value="12"></div>
+        <div class="fg"><label data-i18n="stTread">Tread (mm)</label><input id="stTread" data-u="mm" type="number" min="0" step="any" value="280"></div>
+        <div class="fg"><label data-i18n="stRiser">Riser (mm)</label><input id="stRiser" data-u="mm" type="number" min="0" step="any" value="170"></div>
+        <div class="fg"><label data-i18n="stWidth">Width (m)</label><input id="stW" data-u="m" type="number" min="0" step="any" value="1.1"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="stGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="stAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="stOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-tank"><div class="panel">
+      <h3 data-i18n="cTank">Tank / Pool</h3><p class="desc" data-i18n="tankDesc">Capacity and concrete for rectangular tanks.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="dimL">Length (m)</label><input id="tkL" data-u="m" type="number" min="0" step="any" value="4"></div>
+        <div class="fg"><label data-i18n="dimW">Width (m)</label><input id="tkW" data-u="m" type="number" min="0" step="any" value="3"></div>
+        <div class="fg"><label data-i18n="tkDepth">Depth (m)</label><input id="tkH" data-u="m" type="number" min="0" step="any" value="2"></div>
+        <div class="fg"><label data-i18n="tkWall">Wall thickness (mm)</label><input id="tkTh" data-u="mm" type="number" min="0" step="any" value="200"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="tkGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="tkAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="tkOut"></div>
+    </div></div>
+
+    <div class="calc" id="c-readymix"><div class="panel">
+      <h3 data-i18n="cReadymix">Ready-mix concrete</h3><p class="desc" data-i18n="readymixDesc">Mixer trucks for a concrete volume.</p>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="rmVol">Volume (m³)</label><input id="rmVol" data-u="m3" type="number" min="0" step="any" value="20"></div>
+        <div class="fg"><label data-i18n="rmTruck">Truck capacity (m³)</label><input id="rmTruck" data-u="m3" type="number" min="0" step="any" value="8"></div>
+        <div class="fg"><label data-i18n="wastePct">Waste (%)</label><input id="rmWaste" type="number" min="0" step="1" value="5"></div>
+      </div>
+      <div class="row-actions"><button class="btn btn-primary btn-sm" id="rmGo" data-i18n="calcBtn">Calculate</button><button class="btn btn-ghost btn-sm" id="rmAdd" data-i18n="addToProject">Add to project</button></div>
+      <div class="resultbox" id="rmOut"></div>
     </div></div>
 
 <!-- ================= PROJECT ================= -->
@@ -406,7 +493,10 @@ body.dark .section[style]{background:#182019!important}
       <div class="formgrid" style="margin-bottom:16px">
         <div class="fg"><label data-i18n="projSelL">Project</label><select id="pjSel"></select></div>
         <div class="fg"><label data-i18n="projNameL">Project name</label><input id="pjName" data-i18n-ph="projNamePh" placeholder="e.g. Villa roof"></div>
-        <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="pjNew" data-i18n="newProject">+ New</button><button class="btn btn-ghost btn-sm" id="pjDel" data-i18n="del">Delete</button></div></div>
+        <div class="fg"><label>&nbsp;</label><div style="display:flex;gap:8px"><button class="btn btn-ghost btn-sm" id="pjNew" data-i18n="newProject">+ New</button><button class="btn btn-ghost btn-sm" id="pjDup" data-i18n="duplicate">Duplicate</button><button class="btn btn-ghost btn-sm" id="pjDel" data-i18n="del">Delete</button></div></div>
+      </div>
+      <div class="formgrid" style="margin-bottom:16px">
+        <div class="fg" style="grid-column:1/-1"><label data-i18n="notesL">Notes</label><textarea id="pjNotes" rows="2" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit"></textarea></div>
       </div>
       <table class="data"><thead><tr><th data-i18n="thMaterial">Material</th><th data-i18n="thQty">Quantity</th><th data-i18n="thUnit">Unit</th><th data-i18n="thPrice">Price/unit</th><th data-i18n="thTotal">Total</th><th></th></tr></thead><tbody id="pjBody"></tbody></table>
       <div class="formgrid" style="margin-top:16px;max-width:640px">
@@ -417,6 +507,7 @@ body.dark .section[style]{background:#182019!important}
       <div class="hint" id="pjSub"></div>
       <div class="row-actions">
         <button class="btn btn-ghost btn-sm" id="pjCsv" data-i18n="dlCsv">Download CSV</button>
+        <button class="btn btn-ghost btn-sm" id="pjXlsx" data-i18n="dlXlsx">Download Excel</button>
         <button class="btn btn-ghost btn-sm" id="pjQuote" data-i18n="quoteBtn">Quote PDF</button>
         <button class="btn btn-ghost btn-sm" id="pjShare" data-i18n="shareBtn">Share link</button>
         <button class="btn btn-ghost btn-sm" id="pjPrint" data-i18n="print">Print</button>
@@ -437,6 +528,61 @@ body.dark .section[style]{background:#182019!important}
       <p class="desc" data-i18n="priceDbDesc">Default prices applied when adding to the project. Editable.</p>
       <table class="data"><thead><tr><th data-i18n="thMaterial">Material</th><th data-i18n="thPrice">Price</th><th data-i18n="thUnit">Unit</th></tr></thead><tbody id="pdbBody"></tbody></table>
     </div>
+    <div class="panel">
+      <h3 data-i18n="scenTitle">Scenarios</h3>
+      <p class="desc" data-i18n="scenDesc">Snapshot the current list to compare options side by side.</p>
+      <div class="row-actions" style="margin-bottom:12px"><button class="btn btn-ghost btn-sm" id="scSave" data-i18n="scSave">Save as scenario</button></div>
+      <table class="data"><thead><tr><th data-i18n="scName">Scenario</th><th data-i18n="scItems">Items</th><th data-i18n="thTotal">Total</th><th></th></tr></thead><tbody id="scBody"></tbody></table>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SUPPLIERS ================= -->
+<section class="view" id="v-suppliers">
+  <div class="apphead"><div class="wrap"><h2 data-i18n="navSuppliers">Suppliers</h2><p data-i18n="supSub">Compare supplier prices per material.</p></div></div>
+  <div class="wrap">
+    <div class="panel">
+      <div class="row-actions" style="margin-bottom:12px">
+        <button class="btn btn-ghost btn-sm" id="supAdd" data-i18n="addSupplier">+ Add supplier</button>
+        <button class="btn btn-ghost btn-sm" id="supCheap" data-i18n="useCheapest">Use cheapest prices</button>
+      </div>
+      <div style="overflow-x:auto"><table class="data"><thead><tr id="supHead"></tr></thead><tbody id="supBody"></tbody><tfoot><tr id="supFoot"></tr></tfoot></table></div>
+      <p class="hint" data-i18n="supHint">Totals are calculated from the current project's quantities.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ================= DASHBOARD ================= -->
+<section class="view" id="v-dashboard">
+  <div class="apphead"><div class="wrap"><h2 data-i18n="navDashboard">Dashboard</h2><p data-i18n="dashSub">Your projects at a glance.</p></div></div>
+  <div class="wrap">
+    <div class="dashgrid" id="dashCards"></div>
+    <div class="panel"><h3 data-i18n="dashCostTitle">Cost per project</h3><div id="dashBars"></div></div>
+    <div class="panel"><h3 data-i18n="dashTopTitle">Top materials by cost</h3><div id="dashTop"></div></div>
+  </div>
+</section>
+
+<!-- ================= SETTINGS ================= -->
+<section class="view" id="v-settings">
+  <div class="apphead"><div class="wrap"><h2 data-i18n="navSettings">Settings</h2><p data-i18n="setSub">Defaults and data.</p></div></div>
+  <div class="wrap">
+    <div class="panel"><h3 data-i18n="setDefTitle">Defaults</h3>
+      <div class="formgrid">
+        <div class="fg"><label data-i18n="currencyL">Currency</label><select id="setCur"><option>€</option><option>$</option><option>£</option><option>CHF</option><option>lei</option></select></div>
+        <div class="fg"><label data-i18n="marginPct">Margin (%)</label><input id="setMargin" type="number" min="0" step="1"></div>
+        <div class="fg"><label data-i18n="unitsL">Units</label><select id="setUnits"><option value="metric" data-i18n="unitsMetric">Metric</option><option value="imp" data-i18n="unitsImp">Imperial</option></select></div>
+      </div>
+    </div>
+    <div class="panel"><h3 data-i18n="setDataTitle">Data</h3>
+      <div class="row-actions">
+        <button class="btn btn-ghost btn-sm" id="setInstall" data-i18n="installApp">Install app</button>
+        <button class="btn btn-ghost btn-sm" id="setBackup" data-i18n="backupBtn">Backup</button>
+        <button class="btn btn-ghost btn-sm" id="setRestoreBtn" data-i18n="restoreBtn">Restore</button>
+        <input type="file" id="setRestore" accept="application/json" style="display:none">
+        <button class="btn btn-ghost btn-sm" id="setReset" data-i18n="resetAll">Reset all data</button>
+      </div>
+      <p class="hint" data-i18n="setDataHint">Backup saves everything (projects, prices, suppliers, settings) into one file.</p>
+    </div>
   </div>
 </section>
 
@@ -446,7 +592,7 @@ body.dark .section[style]{background:#182019!important}
   <div class="wrap">
     <div class="price-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,420px));gap:22px;justify-content:center">
       <div class="card" style="position:relative"><h3>Free</h3><div style="font-size:40px;font-weight:800;margin:10px 0 2px">0</div><div class="muted" data-i18n="prForever">forever</div>
-        <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prF1">All 13 calculators</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prF2">Project material list</li><li style="padding:8px 0" data-i18n="prF3">CSV &amp; PDF export</li></ul>
+        <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prF1">All 18 calculators</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prF2">Project material list</li><li style="padding:8px 0" data-i18n="prF3">CSV &amp; PDF export</li></ul>
         <button class="btn btn-ghost" style="width:100%" data-i18n="prChooseFree">You are on Free</button></div>
       <div class="card" style="position:relative;border:2px solid var(--brand)"><h3>Pro</h3><div style="font-size:40px;font-weight:800;margin:10px 0 2px">—</div><div class="muted" data-i18n="prSoon">coming soon</div>
         <ul style="list-style:none;margin:20px 0"><li style="padding:8px 0;border-bottom:1px solid var(--line)"><b data-i18n="prP1">Everything in Free</b></li><li style="padding:8px 0;border-bottom:1px solid var(--line)" data-i18n="prP2">Saved projects with history</li><li style="padding:8px 0" data-i18n="prP3">Branded quote PDFs</li></ul>
@@ -454,6 +600,12 @@ body.dark .section[style]{background:#182019!important}
     </div>
   </div>
 </section>
+<div id="shareModal" class="modal" style="display:none"><div class="modal-box">
+  <h3 data-i18n="shareBtn">Share link</h3>
+  <input id="shareUrl" readonly onclick="this.select()" style="width:100%;border:1px solid var(--line);border-radius:6px;padding:8px 10px;font:inherit">
+  <div style="text-align:center;margin:12px 0"><img id="shareQr" alt="QR" style="max-width:180px;border:1px solid var(--line);border-radius:8px"></div>
+  <div class="row-actions"><button class="btn btn-primary btn-sm" id="shareCopy" data-i18n="copyBtn">Copy</button><button class="btn btn-ghost btn-sm" id="shareClose" data-i18n="closeBtn">Close</button></div>
+</div></div>
 </main>
 
 <footer class="no-print">
@@ -778,14 +930,33 @@ function applyI18n(){
   const s=$('langSel');s.innerHTML='';
   LANGS12.forEach(l=>{const o=document.createElement('option');o.value=l.c;o.textContent=l.n;if(l.c===LANG)o.selected=true;s.appendChild(o)});
   document.querySelectorAll('#mainnav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===CUR));
+  refreshUnitLabels();updateUnitBtn();
 }
 let CUR='home';
-function show(v){CUR=v;document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));$('v-'+v).classList.add('active');document.querySelectorAll('#mainnav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===v));window.scrollTo(0,0)}
+function show(v){CUR=v;document.querySelectorAll('.view').forEach(e=>e.classList.remove('active'));$('v-'+v).classList.add('active');document.querySelectorAll('#mainnav button').forEach(b=>b.classList.toggle('active',b.dataset.nav===v));window.scrollTo(0,0);if(v==='suppliers')renderSuppliers();if(v==='dashboard')renderDashboard();}
 document.addEventListener('click',e=>{const n=e.target.closest('[data-nav]');if(n)show(n.dataset.nav)});
 /* ================= calculators ================= */
-let CC=null; // last concrete result
+/* ----- units: metric / imperial ----- */
+const U2M={m:0.3048,m2:0.092903,m3:0.764555,kg:0.453592,mm:25.4};
+const UN={m:'m',m2:'m²',m3:'m³',kg:'kg',mm:'mm',t:'t'};
+const UNC={m:['ft',3.28084],m2:['ft²',10.7639],m3:['yd³',1.30795],kg:['lb',2.20462],mm:['in',0.0393701],t:['ton',1.10231]};
+const UFAC={m:1,'m²':1,'m³':1,kg:1,mm:1,t:1,ft:3.28084,'ft²':10.7639,'yd³':1.30795,lb:2.20462,ton:1.10231,in:0.0393701};
+function rvEl(el){let v=num(el.value);const u=el.dataset&&el.dataset.u;if(S.units==='imp'&&u&&U2M[u])v=v*U2M[u];return v}
+function rv(id){return rvEl(document.getElementById(id))}
+function cv(v,u){if(S.units==='imp'&&UNC[u])return{n:v*UNC[u][1],u:UNC[u][0]};return{n:v,u:UN[u]||u}}
+function dv(v,u,dec){const c=cv(v,u);return fmt(c.n,dec==null?2:dec)+' '+c.u}
+function ci(metricVal,unit,label,priceKey,dec){const c=cv(metricVal,unit);return[label,fmt(c.n,dec==null?2:dec),c.u,priceKey]}
+function refreshUnitLabels(){const pairs=[['(mm)','(in)'],['(m³)','(yd³)'],['(m²)','(ft²)'],['(kg)','(lb)'],['(m)','(ft)']];
+  const fix=el=>{pairs.forEach(p=>{el.textContent=S.units==='imp'?el.textContent.split(p[0]).join(p[1]):el.textContent.split(p[1]).join(p[0])})};
+  document.querySelectorAll('[data-u]').forEach(el=>{const fg=el.closest('.fg');if(fg){const lab=fg.querySelector('label');if(lab)fix(lab)}});
+  document.querySelectorAll('[data-ul]').forEach(fix)}
+function setUnits(u){S.units=u;persist();applyI18n();refreshUnitLabels();refreshCalcs();updateUnitBtn();const su=$('setUnits');if(su)su.value=u}
+function updateUnitBtn(){const b=$('unitBtn');if(b)b.textContent=S.units==='imp'?'ft/m':'m/ft'}
+function refreshCalcs(){const p=document.querySelector('.calc.active');if(!p)return;const go=p.querySelector('button[id$="Go"]');if(go)go.click()}
+/* ----- concrete ----- */
+let CC=null;
 function calcConcrete(){
-  const L=num($('ccL').value),W=num($('ccW').value),T=num($('ccT').value);
+  const L=rv('ccL'),W=rv('ccW'),T=rv('ccT');
   if(!(L>0&&W>0&&T>0)){toast(t('msgInvalid'));return}
   const mix=$('ccMix').value.split(':').map(Number),sum=mix[0]+mix[1]+mix[2];
   const w=1+num($('ccWaste').value)/100;
@@ -793,64 +964,202 @@ function calcConcrete(){
   const cemKg=Vd*mix[0]/sum*1440, bags=cemKg/50;
   const sandT=Vd*mix[1]/sum*1.6, gravT=Vd*mix[2]/sum*1.5, waterL=cemKg*0.5;
   CC={vol:V,bags,sandT,gravT,waterL};
-  showResult('ccOut',[[t('concreteVol'),fmt(V,2)+' m³'],[t('cementBags'),fmt(bags,1)],[t('sandT'),fmt(sandT,2)+' t'],[t('gravelT'),fmt(gravT,2)+' t'],[t('waterL'),fmt(waterL,0)+' L']]);
+  showResult('ccOut',[[t('concreteVol'),dv(V,'m3')],[t('cementBags'),fmt(bags,1)],[t('sandT'),dv(sandT,'t')],[t('gravelT'),dv(gravT,'t')],[t('waterL'),fmt(waterL,0)+' L']]);
 }
+/* ----- rebar ----- */
 let RB=null;
-function rbRows(){return[...document.querySelectorAll('#rbBody tr')].map(tr=>({dia:num(tr.querySelector('[data-f="dia"]').value),len:num(tr.querySelector('[data-f="len"]').value)}))}
+function rbRows(){return[...document.querySelectorAll('#rbBody tr')].map(tr=>({dia:num(tr.querySelector('[data-f="dia"]').value),len:rvEl(tr.querySelector('[data-f="len"]'))}))}
 function renderRbRows(data){const tb=$('rbBody');tb.innerHTML='';(data||[{dia:12,len:100}]).forEach(r=>{const tr=document.createElement('tr');
-  tr.innerHTML='<td><select data-f="dia">'+Object.keys(REBAR_W).map(d=>'<option value="'+d+'"'+(String(r.dia)===d?' selected':'')+'>Φ'+d+'</option>').join('')+'</select></td><td><input type="number" min="0" step="any" value="'+r.len+'" data-f="len"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+  tr.innerHTML='<td><select data-f="dia">'+Object.keys(REBAR_W).map(d=>'<option value="'+d+'"'+(String(r.dia)===d?' selected':'')+'>Φ'+d+'</option>').join('')+'</select></td><td><input type="number" min="0" step="any" value="'+r.len+'" data-f="len" data-u="m"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
   tr.querySelector('[data-del]').onclick=()=>{tr.remove()};tb.appendChild(tr)})}
 function calcRebar(){const rows=rbRows().filter(r=>r.len>0);if(!rows.length){toast(t('msgInvalid'));return}
   let tot=0;const det=rows.map(r=>{const w=r.len*(REBAR_W[r.dia]||0);tot+=w;return{d:r.dia,len:r.len,w,bars:r.len/12}});
   RB={det,tot};
-  showResult('rbOut',det.map(d=>['Φ'+d.d+' — '+fmt(d.len,0)+' m',fmt(d.w,1)+' kg ('+fmt(d.bars,1)+' '+t('bars12m')+')']).concat([[t('totalWt'),fmt(tot,1)+' kg ('+fmt(tot/1000,2)+' t)']]));
+  showResult('rbOut',det.map(d=>['Φ'+d.d+' — '+dv(d.len,'m',0),dv(d.w,'kg',1)+' ('+fmt(d.bars,1)+' '+t('bars12m')+')']).concat([[t('totalWt'),dv(tot,'kg',1)+' ('+dv(tot/1000,'t')+')']]));
 }
+/* ----- wall ----- */
 let WL=null;
 function calcWall(){
-  const L=num($('wL').value),H=num($('wH').value),open=num($('wOpen').value);
+  const L=rv('wL'),H=rv('wH'),open=rv('wOpen');
   if(!(L>0&&H>0)){toast(t('msgInvalid'));return}
   const type=$('wType').value, w=1+num($('wWaste').value)/100;
   const net=Math.max(L*H-open,0);
   const face=type==='block'?0.39*0.19:0.25*0.065;
   const units=Math.ceil(net/face*w), mortar=net*0.025*w;
   WL={units,mortar,type};
-  showResult('wOut',[[t('unitsNeeded'),fmt(units,0)+' '+(type==='block'?t('uBlock').split(' ')[0]+'s':t('uBrick').split(' ')[0]+'s')],[t('mortarM3'),fmt(mortar,2)+' m³']]);
+  showResult('wOut',[[t('unitsNeeded'),fmt(units,0)+' '+(type==='block'?t('uBlock').split(' ')[0]+'s':t('uBrick').split(' ')[0]+'s')],[t('mortarM3'),dv(mortar,'m3')]]);
 }
+/* ----- paint ----- */
 let PT=null;
-function calcPaint(){const A=num($('pArea').value),cov=num($('pCov').value),coats=Math.max(1,Math.round(num($('pCoats').value)));
+function calcPaint(){const A=rv('pArea'),cov=num($('pCov').value),coats=Math.max(1,Math.round(num($('pCoats').value)));
   if(!(A>0&&cov>0)){toast(t('msgInvalid'));return}
   const L=A/cov*coats;PT={L,cans:L/15};
   showResult('pOut',[[t('paintL'),fmt(L,1)+' L'],[t('cans15'),fmt(L/15,1)]]);
 }
+/* ----- tiles ----- */
 let TL=null;
-function calcTiles(){const L=num($('tL').value),W=num($('tW').value);
+function calcTiles(){const L=rv('tL'),W=rv('tW');
   if(!(L>0&&W>0)){toast(t('msgInvalid'));return}
   const sv=$('tSize').value;let ta;
   if(sv==='3060')ta=0.3*0.6;else{const s=num(sv)/100;ta=s*s}
   const w=1+num($('tWaste').value)/100, area=L*W;
   const tiles=Math.ceil(area/ta*w), adh=area*4, grout=area*0.5;
   TL={tiles,adh,grout,area};
-  showResult('tOut',[[t('tilesNeeded'),fmt(tiles,0)],[t('adhesiveKg'),fmt(adh,1)+' kg'],[t('groutKg'),fmt(grout,1)+' kg']]);
+  showResult('tOut',[[t('tilesNeeded'),fmt(tiles,0)],[t('adhesiveKg'),dv(adh,'kg',1)],[t('groutKg'),dv(grout,'kg',1)]]);
 }
+/* ----- aggregates ----- */
 let AG=null;
-function calcAgg(){const V=num($('aVol').value),d=num($('aType').value),w=1+num($('aWaste').value)/100;
+function calcAgg(){const V=rv('aVol'),d=num($('aType').value),w=1+num($('aWaste').value)/100;
   if(!(V>0)){toast(t('msgInvalid'));return}
   const tonnes=V*d*w;AG={tonnes,name:$('aType').selectedOptions[0].textContent};
-  showResult('aOut',[[t('aggWt'),fmt(tonnes,2)+' t']]);
+  showResult('aOut',[[t('aggWt'),dv(tonnes,'t')]]);
 }
+/* ----- lumber ----- */
 let LB=null;
-function lbRows(){return[...document.querySelectorAll('#lbBody tr')].map(tr=>({pcs:Math.round(num(tr.querySelector('[data-f="pcs"]').value)),w:num(tr.querySelector('[data-f="w"]').value),h:num(tr.querySelector('[data-f="h"]').value),len:num(tr.querySelector('[data-f="len"]').value)}))}
 function renderLbRows(data){const tb=$('lbBody');tb.innerHTML='';(data||[{pcs:10,w:50,h:100,len:4}]).forEach(r=>{const tr=document.createElement('tr');
-  tr.innerHTML='<td><input type="number" min="0" step="1" value="'+r.pcs+'" data-f="pcs"></td><td><input type="text" value="'+r.w+'x'+r.h+'" data-f="sec" placeholder="50x100"></td><td><input type="number" min="0" step="any" value="'+r.len+'" data-f="len"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+  tr.innerHTML='<td><input type="number" min="0" step="1" value="'+r.pcs+'" data-f="pcs"></td><td><input type="text" value="'+r.w+'x'+r.h+'" data-f="sec" placeholder="50x100"></td><td><input type="number" min="0" step="any" value="'+r.len+'" data-f="len" data-u="m"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
   tr.querySelector('[data-del]').onclick=()=>{tr.remove()};tb.appendChild(tr)})}
 function calcLumber(){
   const tb=$('lbBody');let vol=0;let ok=false;
-  [...tb.querySelectorAll('tr')].forEach(tr=>{const pcs=Math.round(num(tr.querySelector('[data-f="pcs"]').value)),len=num(tr.querySelector('[data-f="len"]').value);
+  [...tb.querySelectorAll('tr')].forEach(tr=>{const pcs=Math.round(num(tr.querySelector('[data-f="pcs"]').value)),len=rvEl(tr.querySelector('[data-f="len"]'));
     const sec=tr.querySelector('[data-f="sec"]').value.split('x');const w=num(sec[0]),h=num(sec[1]);
     if(pcs>0&&w>0&&h>0&&len>0){vol+=pcs*(w/1000)*(h/1000)*len;ok=true}});
   if(!ok){toast(t('msgInvalid'));return}
-  LB={vol};showResult('lbOut',[[t('lumberVol'),fmt(vol,3)+' m³']]);
+  LB={vol};showResult('lbOut',[[t('lumberVol'),dv(vol,'m3',3)]]);
 }
+/* ----- excavation ----- */
+let EX=null;
+function calcExc(){const L=rv('exL'),W=rv('exW'),D=rv('exD');
+  if(!(L>0&&W>0&&D>0)){toast(t('msgInvalid'));return}
+  const vol=L*W*D,loose=vol*(1+num($('exSwell').value)/100),truck=Math.max(rv('exTruck'),0.1),trucks=Math.ceil(loose/truck);
+  EX={loose,trucks};
+  showResult('exOut',[[t('excVol'),dv(vol,'m3')],[t('looseVol'),dv(loose,'m3')],[t('truckLoads'),fmt(trucks,0)]])}
+/* ----- steel beams ----- */
+const PROFILES=[['IPE 80',6.0],['IPE 100',8.1],['IPE 120',10.4],['IPE 140',12.9],['IPE 160',15.8],['IPE 180',18.8],['IPE 200',22.4],['IPE 220',26.2],['IPE 240',30.7],['IPE 270',36.1],['IPE 300',42.2],['HEA 100',16.7],['HEA 120',19.9],['HEA 140',24.7],['HEA 160',30.4],['HEA 180',35.5],['HEA 200',42.3],['HEB 100',20.4],['HEB 120',26.7],['HEB 140',33.7],['HEB 160',42.6]];
+let BM=null;
+function renderBmRows(){const tb=$('bmBody');tb.innerHTML='';addBmRow()}
+function addBmRow(){const tb=$('bmBody');const tr=document.createElement('tr');
+  tr.innerHTML='<td><select data-f="p">'+PROFILES.map(p=>'<option value="'+p[1]+'">'+p[0]+' — '+p[1]+' kg/m</option>').join('')+'</select></td><td><input type="number" min="0" step="any" value="6" data-f="len" data-u="m"></td><td><input type="number" min="0" step="1" value="2" data-f="qty"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+  tr.querySelector('[data-del]').onclick=()=>tr.remove();tb.appendChild(tr)}
+function calcBeams(){const rows=[...document.querySelectorAll('#bmBody tr')];if(!rows.length){toast(t('msgInvalid'));return}
+  let tot=0;const det=[];
+  rows.forEach(tr=>{const kgm=num(tr.querySelector('[data-f="p"]').value),len=rvEl(tr.querySelector('[data-f="len"]')),qty=Math.round(num(tr.querySelector('[data-f="qty"]').value));
+    if(len>0&&qty>0){const w=kgm*len*qty;tot+=w;det.push({p:tr.querySelector('[data-f="p"]').selectedOptions[0].textContent.split(' — ')[0],w})}});
+  if(!det.length){toast(t('msgInvalid'));return}
+  BM={det,tot};
+  showResult('bmOut',det.map(d=>[d.p,dv(d.w,'kg',1)]).concat([[t('totalWt'),dv(tot,'kg',1)+' ('+dv(tot/1000,'t')+')']]))}
+/* ----- drywall ----- */
+let DW=null;
+function calcDrywall(){const A=rv('dwArea');if(!(A>0)){toast(t('msgInvalid'));return}
+  const w=1+num($('dwWaste').value)/100,boards=Math.ceil(A/2.88*w),screws=Math.ceil(A*12),compound=A*0.5;
+  DW={boards,compound};
+  showResult('dwOut',[[t('dwBoards'),fmt(boards,0)],[t('dwScrews'),fmt(screws,0)],[t('dwCompound'),dv(compound,'kg',1)]])}
+/* ----- insulation ----- */
+let IN2=null;
+function calcInsul(){const A=rv('inArea'),th=rv('inThick')/1000;if(!(A>0&&th>0)){toast(t('msgInvalid'));return}
+  const vol=A*th,rolls=Math.ceil(A/Math.max(num($('inRoll').value),0.1));
+  IN2={vol,rolls,area:A};
+  showResult('inOut',[[t('insVol'),dv(vol,'m3')],[t('insRolls'),fmt(rolls,0)]])}
+/* ----- roofing ----- */
+let RF=null;
+function calcRoof(){const L=rv('rfL'),W=rv('rfW');if(!(L>0&&W>0)){toast(t('msgInvalid'));return}
+  const area=L*W*(1+num($('rfSlope').value)/100),type=$('rfType').value;let main;
+  if(type==='tiles'){const n=Math.ceil(area*10*1.05);RF={type,n};main=[t('rfTilesN'),fmt(n,0)]}
+  else{const n=Math.ceil(area/1.8*1.05);RF={type,n};main=[t('rfSheetsN'),fmt(n,0)]}
+  showResult('rfOut',[[t('roofArea'),dv(area,'m2',1)],main])}
+/* ----- fencing ----- */
+let FE=null;
+function calcFence(){const P=rv('fePerim'),sp=Math.max(rv('feSpacing'),0.1);
+  if(!(P>0)){toast(t('msgInvalid'));return}
+  const posts=Math.ceil(P/sp)+1,rolls=Math.ceil(P/50);
+  FE={posts,rolls};
+  showResult('feOut',[[t('fencePosts'),fmt(posts,0)],[t('meshRolls'),fmt(rolls,0)]])}
+/* ----- plaster ----- */
+let PL=null;
+function calcPlaster(){const A=rv('plArea'),th=rv('plThick')/1000;if(!(A>0&&th>0)){toast(t('msgInvalid'));return}
+  const w=1+num($('plWaste').value)/100,vol=A*th,kg=vol*1400,bags=Math.ceil(kg/25*w);
+  PL={bags,vol};
+  showResult('plOut',[[t('plasterVol'),dv(vol,'m3')],[t('plasterBags'),fmt(bags,0)]])}
+/* ----- screed ----- */
+let SC=null;
+function calcScreed(){const A=rv('scArea'),th=rv('scThick')/1000;if(!(A>0&&th>0)){toast(t('msgInvalid'));return}
+  const w=1+num($('scWaste').value)/100,vol=A*th;
+  const bags=vol*(1/5)*1440/50*w,sandT=vol*(4/5)*1.6*w;
+  SC={bags,sandT,vol};
+  showResult('scOut',[[t('screedVol'),dv(vol,'m3')],[t('cementBags'),fmt(bags,1)],[t('sandT'),dv(sandT,'t')]])}
+/* ----- stairs ----- */
+let ST=null;
+function calcStairs(){const n=Math.max(1,Math.round(num($('stN').value))),tread=rv('stTread')/1000,riser=rv('stRiser')/1000,W=rv('stW');
+  if(!(tread>0&&riser>0&&W>0)){toast(t('msgInvalid'));return}
+  const vol=n*(tread*riser/2)*W*1.1;
+  ST={vol};
+  showResult('stOut',[[t('stairsVol'),dv(vol,'m3')],[t('stSteps'),fmt(n,0)]])}
+/* ----- tank / pool ----- */
+let TK=null;
+function calcTank(){const L=rv('tkL'),W=rv('tkW'),H=rv('tkH'),th=rv('tkTh')/1000;
+  if(!(L>0&&W>0&&H>0&&th>0)){toast(t('msgInvalid'));return}
+  const cap=L*W*H,conc=2*(L+W)*H*th+L*W*th;
+  TK={cap,conc};
+  showResult('tkOut',[[t('tankCap'),dv(cap,'m3')],[t('tankConc'),dv(conc,'m3')]])}
+/* ----- ready-mix ----- */
+let RM=null;
+function calcReadymix(){const V=rv('rmVol'),truck=Math.max(rv('rmTruck'),0.1);
+  if(!(V>0)){toast(t('msgInvalid'));return}
+  const tot=V*(1+num($('rmWaste').value)/100),trucks=Math.ceil(tot/truck);
+  RM={tot,trucks};
+  showResult('rmOut',[[t('rmTotal'),dv(tot,'m3')],[t('rmTrucks'),fmt(trucks,0)]])}
+/* ----- bindings ----- */
+function bindCalcButtons(){
+  $('ccGo').onclick=calcConcrete;
+  $('ccAdd').onclick=()=>{if(!CC){toast(t('msgInvalid'));return}addItems([ci(CC.vol,'m3',t('cConcrete'),'concrete_m3'),ci(CC.bags,'pcs',t('cementBags'),'cement_bag',1),ci(CC.sandT,'t',t('sandT'),'sand_t'),ci(CC.gravT,'t',t('gravelT'),'gravel_t')])};
+  $('rbAdd').onclick=()=>renderRbRows([...rbRows(),{dia:12,len:S.units==='imp'?328:100}]);
+  $('rbGo').onclick=calcRebar;
+  $('rbAddP').onclick=()=>{if(!RB){toast(t('msgInvalid'));return}addItems(RB.det.map(d=>{const c=cv(d.w,'kg');return['Rebar Φ'+d.d,fmt(c.n,1),c.u,'rebar_kg']}))};
+  $('wGo').onclick=calcWall;
+  $('wAdd').onclick=()=>{if(!WL){toast(t('msgInvalid'));return}const m=cv(WL.mortar,'m3');addItems([[(WL.type==='block'?'Blocks':'Bricks'),fmt(WL.units,0),'pcs',WL.type==='block'?'block_pc':'brick_pc'],[t('mortarM3'),fmt(m.n,2),m.u,'mortar_m3']])};
+  $('pGo').onclick=calcPaint;
+  $('pAdd').onclick=()=>{if(!PT){toast(t('msgInvalid'));return}addItems([[t('cPaint'),fmt(PT.L,1),'L','paint_l']])};
+  $('tGo').onclick=calcTiles;
+  $('tAdd').onclick=()=>{if(!TL){toast(t('msgInvalid'));return}const a=cv(TL.area,'m2'),ad=cv(TL.adh,'kg');addItems([[t('cTiles'),fmt(a.n,1),a.u,'tile_m2'],[t('adhesiveKg'),fmt(ad.n,1),ad.u,'adhesive_kg']])};
+  $('aGo').onclick=calcAgg;
+  $('aAdd').onclick=()=>{if(!AG){toast(t('msgInvalid'));return}const c=cv(AG.tonnes,'t');addItems([[AG.name.split(' (')[0],fmt(c.n,2),c.u,'agg_t']])};
+  $('lbAdd').onclick=()=>{const tb=$('lbBody');const tr=document.createElement('tr');tr.innerHTML='<td><input type="number" min="0" step="1" value="10" data-f="pcs"></td><td><input type="text" value="50x100" data-f="sec"></td><td><input type="number" min="0" step="any" value="4" data-f="len" data-u="m"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';tr.querySelector('[data-del]').onclick=()=>tr.remove();tb.appendChild(tr)};
+  $('lbGo').onclick=calcLumber;
+  $('lbAddP').onclick=()=>{if(!LB){toast(t('msgInvalid'));return}const c=cv(LB.vol,'m3');addItems([[t('cLumber'),fmt(c.n,3),c.u,'lumber_m3']])};
+  $('exGo').onclick=calcExc;
+  $('exAdd').onclick=()=>{if(!EX){toast(t('msgInvalid'));return}const c=cv(EX.loose,'m3');addItems([[t('cExcav')+' ('+t('looseVol')+')',fmt(c.n,2),c.u,'exc_m3']])};
+  $('bmAddRow').onclick=addBmRow;$('bmGo').onclick=calcBeams;
+  $('bmAddP').onclick=()=>{if(!BM){toast(t('msgInvalid'));return}addItems(BM.det.map(d=>{const c=cv(d.w,'kg');return['Steel '+d.p,fmt(c.n,1),c.u,'steel_kg']}))};
+  $('dwGo').onclick=calcDrywall;
+  $('dwAdd').onclick=()=>{if(!DW){toast(t('msgInvalid'));return}const c=cv(DW.compound,'kg');addItems([[t('dwBoards'),fmt(DW.boards,0),'pcs','dw_board'],[t('dwCompound'),fmt(c.n,1),c.u,'compound_kg']])};
+  $('inGo').onclick=calcInsul;
+  $('inAdd').onclick=()=>{if(!IN2){toast(t('msgInvalid'));return}const c=cv(IN2.area,'m2');addItems([[t('cInsul')+' '+$('inThick').value+(S.units==='imp'?'in':'mm'),fmt(c.n,1),c.u,'ins_m2']])};
+  $('rfGo').onclick=calcRoof;
+  $('rfAdd').onclick=()=>{if(!RF){toast(t('msgInvalid'));return}addItems([[RF.type==='tiles'?t('rfTilesN'):t('rfSheetsN'),fmt(RF.n,0),'pcs',RF.type==='tiles'?'roof_tile':'roof_sheet']])};
+  $('feGo').onclick=calcFence;
+  $('feAdd').onclick=()=>{if(!FE){toast(t('msgInvalid'));return}addItems([[t('fencePosts'),fmt(FE.posts,0),'pcs','post_pc'],[t('meshRolls'),fmt(FE.rolls,0),'roll','mesh_roll']])};
+  $('plGo').onclick=calcPlaster;
+  $('plAdd').onclick=()=>{if(!PL){toast(t('msgInvalid'));return}const c=cv(PL.vol,'m3');addItems([[t('cPlaster'),fmt(PL.bags,0),'pcs','plaster_bag']])};
+  $('scGo').onclick=calcScreed;
+  $('scAdd').onclick=()=>{if(!SC){toast(t('msgInvalid'));return}const s=cv(SC.sandT,'t');addItems([[t('cementBags'),fmt(SC.bags,1),'pcs','cement_bag'],[t('sandT'),fmt(s.n,2),s.u,'sand_t']])};
+  $('stGo').onclick=calcStairs;
+  $('stAdd').onclick=()=>{if(!ST){toast(t('msgInvalid'));return}const c=cv(ST.vol,'m3');addItems([[t('cStairs'),fmt(c.n,2),c.u,'concrete_m3']])};
+  $('tkGo').onclick=calcTank;
+  $('tkAdd').onclick=()=>{if(!TK){toast(t('msgInvalid'));return}const c=cv(TK.conc,'m3');addItems([[t('cTank')+' ('+t('tankConc')+')',fmt(c.n,2),c.u,'concrete_m3']])};
+  $('rmGo').onclick=calcReadymix;
+  $('rmAdd').onclick=()=>{if(!RM){toast(t('msgInvalid'));return}const c=cv(RM.tot,'m3');addItems([[t('cReadymix'),fmt(c.n,2),c.u,'concrete_m3']])};
+  $('plGo').onclick=calcPlaster;
+  $('plAdd').onclick=()=>{if(!PL){toast(t('msgInvalid'));return}const c=cv(PL.vol,'m3');addItems([[t('cPlaster'),fmt(PL.bags,0),'pcs','plaster_bag']])};
+  $('scGo').onclick=calcScreed;
+  $('scAdd').onclick=()=>{if(!SC){toast(t('msgInvalid'));return}const s=cv(SC.sandT,'t');addItems([[t('cementBags'),fmt(SC.bags,1),'pcs','cement_bag'],[t('sandT'),fmt(s.n,2),s.u,'sand_t']])};
+  $('stGo').onclick=calcStairs;
+  $('stAdd').onclick=()=>{if(!ST){toast(t('msgInvalid'));return}const c=cv(ST.vol,'m3');addItems([[t('cStairs'),fmt(c.n,2),c.u,'concrete_m3']])};
+  $('tkGo').onclick=calcTank;
+  $('tkAdd').onclick=()=>{if(!TK){toast(t('msgInvalid'));return}const c=cv(TK.conc,'m3');addItems([[t('cTank')+' ('+t('tankConc')+')',fmt(c.n,2),c.u,'concrete_m3']])};
+  $('rmGo').onclick=calcReadymix;
+  $('rmAdd').onclick=()=>{if(!RM){toast(t('msgInvalid'));return}const c=cv(RM.tot,'m3');addItems([[t('cReadymix'),fmt(c.n,2),c.u,'concrete_m3']])};
+}
+
 /* ================= project ================= */
 /* renderProject -> v2 */
 function dl(name,content,mime){const b=new Blob([content],{type:mime||'text/plain'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500)}
@@ -862,7 +1171,7 @@ const MAT_PRICES=[
  ['concrete_m3','Concrete','Σκυρόδεμα',95,'m³'],['cement_bag','Cement bag 50 kg','Τσουβάλι τσιμέντου 50 kg',8,'pcs'],
  ['sand_t','Sand','Άμμος',28,'t'],['gravel_t','Gravel','Χαλίκι',24,'t'],
  ['rebar_kg','Rebar','Οπλισμός',1.35,'kg'],['block_pc','Concrete block','Τσιμεντόλιθος',1.7,'pcs'],
- ['brick_pc','Brick','Τούβλο',0.5,'pcs'],['mortar_m3','Mortar','Κονίαμα',140,'m³'],
+ ['brick_pc','Brick','Τούβλο',0.5,'pcs'],['mortar_m3','Mortar','Κονίαμα',140,'m³'],['plaster_bag','Plaster bag 25 kg','Σακί σοβά 25 kg',9,'pcs'],
  ['paint_l','Paint','Μπογιά',6.5,'L'],['tile_m2','Tiles','Πλακάκια',14,'m²'],
  ['adhesive_kg','Tile adhesive','Κόλλα πλακιδίων',1.6,'kg'],['grout_kg','Grout','Αρμόστοκος',3,'kg'],
  ['agg_t','Aggregates','Αδρανή',22,'t'],['lumber_m3','Lumber','Ξυλεία',480,'m³'],
@@ -877,10 +1186,10 @@ function migrate(){
   if(!S.projects||!S.projects.length)S.projects=[{id:uid(),name:'Project 1',date:new Date().toISOString(),items:[]}];
   if(!S.curPid)S.curPid=S.projects[0].id;
   if(!S.prices)S.prices={};if(!S.company)S.company={name:'',client:'',logo:''};
-  if(S.currency==null)S.currency='€';if(S.margin==null)S.margin=0;
+  if(S.currency==null)S.currency='€';if(S.margin==null)S.margin=0;if(S.units==null)S.units='metric';if(!S.scenarios)S.scenarios=[];
 }
 function cur(){let p=S.projects.find(x=>x.id===S.curPid);if(!p){p=S.projects[0];S.curPid=p.id}return p}
-function addItems(items){const p=cur();items.forEach(it=>p.items.push({id:uid(),key:it[3]||'',material:it[0],qty:num(it[1]),unit:it[2]||'',price:it[3]?priceOf(it[3]):0}));persist();renderProject();toast(t('addedToProject'))}
+function addItems(items){const p=cur();items.forEach(it=>p.items.push({id:uid(),key:it[3]||'',material:it[0],qty:num(it[1]),unit:it[2]||'',price:it[3]?priceOf(it[3])/(UFAC[it[2]]||1):0}));persist();renderProject();toast(t('addedToProject'))}
 function renderProject(){
   const p=cur(),tb=$('pjBody');tb.innerHTML='';
   $('pjName').value=p.name||'';renderPjSel();
@@ -894,8 +1203,9 @@ function renderProject(){
     tr.querySelector('[data-del]').onclick=()=>{p.items=p.items.filter(x=>x.id!==it.id);persist();renderProject()};
     tb.appendChild(tr)});
   $('pjCur').value=S.currency||'€';$('pjMargin').value=S.margin||0;
+  $('pjNotes').value=p.notes||'';
   $('coName').value=(S.company&&S.company.name)||'';$('coClient').value=(S.company&&S.company.client)||'';
-  renderPriceDb();updateTotals();
+  renderPriceDb();updateTotals();renderScenarios();
 }
 function updateTotals(){const p=cur();const sub=p.items.reduce((a,it)=>a+it.qty*it.price,0);const tot=sub*(1+num(S.margin)/100);
   $('pjTotal').textContent=(S.currency||'€')+' '+fmt(tot,2);
@@ -931,55 +1241,252 @@ function quotePDF(){const p=cur();if(!p.items.length){toast(t('listEmpty'));retu
 function shareLink(){const p=cur();if(!p.items.length){toast(t('listEmpty'));return}
   const data={n:p.name,items:p.items.map(it=>[it.material,it.qty,it.unit,it.price])};
   const url=location.origin+location.pathname+'#p='+btoa(unescape(encodeURIComponent(JSON.stringify(data))));
-  const done=()=>toast(t('linkCopied'));
-  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done).catch(()=>prompt('URL:',url));else prompt('URL:',url)}
+  openShareModal(url)}
 function importShared(){if(!location.hash.startsWith('#p='))return;try{
   const data=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(3)))));
   if(data&&data.items&&data.items.length){S.projects.push({id:uid(),name:(data.n||'Shared')+' ('+t('sharedTag')+')',date:new Date().toISOString(),items:data.items.map(a=>({id:uid(),key:'',material:String(a[0]),qty:num(a[1]),unit:String(a[2]||''),price:num(a[3])}))});S.curPid=S.projects[S.projects.length-1].id;persist();history.replaceState(null,'',location.pathname);renderProject();toast(t('msgImported'))}
 }catch(e){}}
 function setDark(d){S.dark=!!d;document.body.classList.toggle('dark',S.dark);persist()}
-/* ----- new calculators ----- */
-let EX=null;
-function calcExc(){const L=num($('exL').value),W=num($('exW').value),D=num($('exD').value);
-  if(!(L>0&&W>0&&D>0)){toast(t('msgInvalid'));return}
-  const vol=L*W*D,loose=vol*(1+num($('exSwell').value)/100),trucks=Math.ceil(loose/Math.max(num($('exTruck').value),0.1));
-  EX={loose,trucks};
-  showResult('exOut',[[t('excVol'),fmt(vol,2)+' m³'],[t('looseVol'),fmt(loose,2)+' m³'],[t('truckLoads'),fmt(trucks,0)]])}
-const PROFILES=[['IPE 80',6.0],['IPE 100',8.1],['IPE 120',10.4],['IPE 140',12.9],['IPE 160',15.8],['IPE 180',18.8],['IPE 200',22.4],['IPE 220',26.2],['IPE 240',30.7],['IPE 270',36.1],['IPE 300',42.2],['HEA 100',16.7],['HEA 120',19.9],['HEA 140',24.7],['HEA 160',30.4],['HEA 180',35.5],['HEA 200',42.3],['HEB 100',20.4],['HEB 120',26.7],['HEB 140',33.7],['HEB 160',42.6]];
-let BM=null;
-function renderBmRows(){const tb=$('bmBody');tb.innerHTML='';addBmRow()}
-function addBmRow(){const tb=$('bmBody');const tr=document.createElement('tr');
-  tr.innerHTML='<td><select data-f="p">'+PROFILES.map(p=>'<option value="'+p[1]+'">'+p[0]+' — '+p[1]+' kg/m</option>').join('')+'</select></td><td><input type="number" min="0" step="any" value="6" data-f="len"></td><td><input type="number" min="0" step="1" value="2" data-f="qty"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
-  tr.querySelector('[data-del]').onclick=()=>tr.remove();tb.appendChild(tr)}
-function calcBeams(){const rows=[...document.querySelectorAll('#bmBody tr')];if(!rows.length){toast(t('msgInvalid'));return}
-  let tot=0;const det=[];
-  rows.forEach(tr=>{const kgm=num(tr.querySelector('[data-f="p"]').value),len=num(tr.querySelector('[data-f="len"]').value),qty=Math.round(num(tr.querySelector('[data-f="qty"]').value));
-    if(len>0&&qty>0){const w=kgm*len*qty;tot+=w;det.push({p:tr.querySelector('[data-f="p"]').selectedOptions[0].textContent.split(' — ')[0],w})}});
-  if(!det.length){toast(t('msgInvalid'));return}
-  BM={det,tot};
-  showResult('bmOut',det.map(d=>[d.p,fmt(d.w,1)+' kg']).concat([[t('totalWt'),fmt(tot,1)+' kg ('+fmt(tot/1000,2)+' t)']]))}
-let DW=null;
-function calcDrywall(){const A=num($('dwArea').value);if(!(A>0)){toast(t('msgInvalid'));return}
-  const w=1+num($('dwWaste').value)/100,boards=Math.ceil(A/2.88*w),screws=Math.ceil(A*12),compound=A*0.5;
-  DW={boards,compound};
-  showResult('dwOut',[[t('dwBoards'),fmt(boards,0)],[t('dwScrews'),fmt(screws,0)],[t('dwCompound'),fmt(compound,1)+' kg']])}
-let IN2=null;
-function calcInsul(){const A=num($('inArea').value),th=num($('inThick').value);if(!(A>0&&th>0)){toast(t('msgInvalid'));return}
-  const vol=A*th/1000,rolls=Math.ceil(A/Math.max(num($('inRoll').value),0.1));
-  IN2={vol,rolls,area:A};
-  showResult('inOut',[[t('insVol'),fmt(vol,2)+' m³'],[t('insRolls'),fmt(rolls,0)]])}
-let RF=null;
-function calcRoof(){const L=num($('rfL').value),W=num($('rfW').value);if(!(L>0&&W>0)){toast(t('msgInvalid'));return}
-  const area=L*W*(1+num($('rfSlope').value)/100),type=$('rfType').value;let main;
-  if(type==='tiles'){const n=Math.ceil(area*10*1.05);RF={type,n};main=[t('rfTilesN'),fmt(n,0)]}
-  else{const n=Math.ceil(area/1.8*1.05);RF={type,n};main=[t('rfSheetsN'),fmt(n,0)]}
-  showResult('rfOut',[[t('roofArea'),fmt(area,1)+' m²'],main])}
-let FE=null;
-function calcFence(){const P=num($('fePerim').value),sp=Math.max(num($('feSpacing').value),0.1);
-  if(!(P>0)){toast(t('msgInvalid'));return}
-  const posts=Math.ceil(P/sp)+1,rolls=Math.ceil(P/50);
-  FE={posts,rolls};
-  showResult('feOut',[[t('fencePosts'),fmt(posts,0)],[t('meshRolls'),fmt(rolls,0)]])}
+/* new calculators moved to calculators section */
+/* ================= v3: suppliers, scenarios, dashboard, settings ================= */
+/* ----- suppliers ----- */
+function supInit(){if(!S.suppliers)S.suppliers={names:['Supplier A','Supplier B'],prices:{}}}
+function renderSuppliers(){supInit();const p=cur(),sup=S.suppliers,cur2=S.currency||'€';
+  const head=$('supHead');head.innerHTML='<th>'+esc(t('thMaterial'))+'</th>'+sup.names.map((n,i)=>'<th><input type="text" value="'+esc(n)+'" data-sup="'+i+'" style="width:110px;font-weight:700"></th>').join('');
+  head.querySelectorAll('[data-sup]').forEach(inp=>inp.addEventListener('input',e=>{sup.names[num(e.target.dataset.sup)]=e.target.value;persist()}));
+  const body=$('supBody');body.innerHTML='';
+  MAT_PRICES.forEach(m=>{const key=m[0];
+    if(!sup.prices[key]||sup.prices[key].length<sup.names.length){const base=sup.prices[key]||[];sup.prices[key]=sup.names.map((_,i)=>base[i]!=null?base[i]:priceOf(key))}
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+esc(LANG==='el'?m[2]:m[1])+' ('+esc(m[4])+')</td>'+sup.prices[key].map((pr,i)=>'<td><input type="number" min="0" step="any" value="'+pr+'" data-k="'+key+'" data-i="'+i+'" style="width:90px"></td>').join('');
+    body.appendChild(tr)});
+  body.querySelectorAll('input[data-k]').forEach(inp=>inp.addEventListener('input',e=>{sup.prices[e.target.dataset.k][num(e.target.dataset.i)]=num(e.target.value);persist();paintCheap();renderSupFoot()}));
+  paintCheap();renderSupFoot();
+  function renderSupFoot(){const foot=$('supFoot');
+    const totals=sup.names.map((_,i)=>p.items.reduce((a,it)=>{const arr=sup.prices[it.key];const pr=arr&&arr[i]!=null&&arr[i]!==''?num(arr[i]):it.price;return a+it.qty*pr},0));
+    foot.innerHTML='<td><b>'+esc(t('thTotal'))+'</b></td>'+totals.map(x=>'<td><b>'+esc(cur2)+' '+fmt(x,2)+'</b></td>').join('')}
+}
+function paintCheap(){const sup=S.suppliers;if(!sup)return;
+  document.querySelectorAll('#supBody tr').forEach(tr=>{const inps=[...tr.querySelectorAll('input[data-k]')];
+    if(inps.length<2)return;const vals=inps.map(i=>num(i.value)),min=Math.min(...vals);
+    inps.forEach(i=>i.closest('td').classList.toggle('cheap',num(i.value)===min))})}
+function useCheapest(){supInit();const sup=S.suppliers;
+  Object.keys(sup.prices).forEach(k=>{const vals=sup.prices[k].map(num);if(vals.length)S.prices[k]=Math.min(...vals)});
+  persist();renderProject();renderSuppliers();toast(t('msgExported'))}
+/* ----- scenarios ----- */
+function renderScenarios(){const tb=$('scBody');if(!tb)return;tb.innerHTML='';
+  if(!S.scenarios)S.scenarios=[];
+  if(!S.scenarios.length){tb.innerHTML='<tr><td colspan="4" class="muted">'+esc(t('listEmpty'))+'</td></tr>';return}
+  S.scenarios.forEach(sc=>{const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+esc(sc.name)+'</td><td>'+sc.items.length+'</td><td>'+esc(S.currency||'€')+' '+fmt(sc.total,2)+'</td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';
+    tr.querySelector('[data-del]').onclick=()=>{S.scenarios=S.scenarios.filter(x=>x.id!==sc.id);persist();renderScenarios()};
+    tb.appendChild(tr)})}
+/* ----- dashboard ----- */
+function projTotal(p){return p.items.reduce((a,it)=>a+it.qty*it.price,0)*(1+num(S.margin)/100)}
+function renderDashboard(){const cards=$('dashCards');if(!cards)return;const cur2=S.currency||'€';
+  const n=S.projects.length,totVal=S.projects.reduce((a,p)=>a+projTotal(p),0),totItems=S.projects.reduce((a,p)=>a+p.items.length,0);
+  cards.innerHTML='<div class="dashcard"><div class="n">'+n+'</div><div class="l">'+esc(t('dashProjects'))+'</div></div>'+
+    '<div class="dashcard"><div class="n">'+cur2+' '+fmt(totVal,2)+'</div><div class="l">'+esc(t('dashValue'))+'</div></div>'+
+    '<div class="dashcard"><div class="n">'+totItems+'</div><div class="l">'+esc(t('dashItems'))+'</div></div>';
+  const max=Math.max(...S.projects.map(projTotal),1);
+  $('dashBars').innerHTML=S.projects.map(p=>{const v=projTotal(p);
+    return '<div class="bar-row"><div class="bl">'+esc(p.name||'—')+'</div><div class="bt"><div class="bf" style="width:'+(v/max*100).toFixed(1)+'%"></div></div><div class="bv">'+cur2+' '+fmt(v,2)+'</div></div>'}).join('')||'<p class="muted">'+esc(t('listEmpty'))+'</p>';
+  const agg={};S.projects.forEach(p=>p.items.forEach(it=>{agg[it.material]=(agg[it.material]||0)+it.qty*it.price}));
+  const top=Object.entries(agg).sort((a,b)=>b[1]-a[1]).slice(0,8),m2=Math.max(...top.map(x=>x[1]),1);
+  $('dashTop').innerHTML=top.map(x=>'<div class="bar-row"><div class="bl">'+esc(x[0])+'</div><div class="bt"><div class="bf" style="width:'+(x[1]/m2*100).toFixed(1)+'%"></div></div><div class="bv">'+cur2+' '+fmt(x[1],2)+'</div></div>').join('')||'<p class="muted">'+esc(t('listEmpty'))+'</p>'}
+/* ----- excel / backup ----- */
+function exportXLSX(){const p=cur();if(!p.items.length){toast(t('listEmpty'));return}
+  if(!(window.XLSX&&XLSX.utils)){exportCSV();return}
+  const rows=[[t('thMaterial'),t('thQty'),t('thUnit'),t('thPrice'),t('thTotal')]];
+  p.items.forEach(it=>rows.push([it.material,it.qty,it.unit,it.price,Math.round(it.qty*it.price*100)/100]));
+  const ws=XLSX.utils.aoa_to_sheet(rows),wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,(p.name||'Project').slice(0,31));
+  const out=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  dl('buildquant-project.xlsx',new Blob([out],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+  toast(t('msgExported'))}
+function backupAll(){dl('buildquant-backup.json',JSON.stringify({app:'buildquant',v:3,date:new Date().toISOString(),state:S}),'application/json');toast(t('msgExported'))}
+function restoreAll(file){if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!d.state||!d.state.projects)throw 0;S=d.state;persist();location.reload()}catch(e){toast(t('msgInvalid'))}};r.readAsText(file)}
+/* ----- share modal ----- */
+function openShareModal(url){$('shareUrl').value=url;
+  $('shareQr').src='https://api.qrserver.com/v1/create-qr-code/?size=180x180&data='+encodeURIComponent(url);
+  $('shareModal').style.display='flex'}
+/* ----- pwa ----- */
+let deferredPrompt=null;
+addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferredPrompt=e});
+function installApp(){if(deferredPrompt){deferredPrompt.prompt();deferredPrompt.userChoice.then(()=>{deferredPrompt=null})}else{toast(t('installHint'))}}
+function regSW(){if('serviceWorker' in navigator){addEventListener('load',()=>{try{navigator.serviceWorker.register('sw.js').catch(()=>{})}catch(e){}})}}
+/* ----- misc project extras ----- */
+function duplicateProject(){const p=cur();const cp=JSON.parse(JSON.stringify(p));cp.id=uid();cp.name=(p.name||'Project')+' ('+t('copyTag')+')';cp.date=new Date().toISOString();
+  S.projects.push(cp);S.curPid=cp.id;persist();renderProject();toast(t('msgExported'))}
+
+Object.assign(I18N.en,{
+navSuppliers:"Suppliers",navDashboard:"Dashboard",navSettings:"Settings",
+supSub:"Compare supplier prices per material.",supHint:"Totals are calculated from the current project's quantities.",
+addSupplier:"+ Add supplier",useCheapest:"Use cheapest prices",
+dashSub:"Your projects at a glance.",dashCostTitle:"Cost per project",dashTopTitle:"Top materials by cost",
+dashProjects:"Projects",dashValue:"Total value",dashItems:"Material lines",
+setSub:"Defaults and data.",setDefTitle:"Defaults",setDataTitle:"Data",
+setDataHint:"Backup saves everything (projects, prices, suppliers, settings) into one file.",
+unitsL:"Units",unitsMetric:"Metric",unitsImp:"Imperial",
+installApp:"Install app",installHint:"Use your browser's menu to install the app.",
+backupBtn:"Backup",restoreBtn:"Restore",resetAll:"Reset all data",
+notesL:"Notes",duplicate:"Duplicate",copyTag:"copy",dlXlsx:"Download Excel",
+scenTitle:"Scenarios",scenDesc:"Snapshot the current list to compare options side by side.",
+scSave:"Save as scenario",scName:"Scenario",scItems:"Items",
+copyBtn:"Copy",closeBtn:"Close",
+cPlaster:"Plaster",cScreed:"Floor screed",cStairs:"Stairs",cTank:"Tank / Pool",cReadymix:"Ready-mix",
+plasterDesc:"Dry plaster mix for walls.",plThick:"Thickness (mm)",plasterVol:"Plaster volume",plasterBags:"Bags (25 kg)",
+screedDesc:"Cement screed 1:4 for floors.",scThick:"Thickness (mm)",screedVol:"Screed volume",
+stairsDesc:"Concrete for a straight staircase.",stSteps:"Steps",stTread:"Tread (mm)",stRiser:"Riser (mm)",stWidth:"Width (m)",stairsVol:"Concrete volume",
+tankDesc:"Capacity and concrete for rectangular tanks.",tkDepth:"Depth (m)",tkWall:"Wall thickness (mm)",tankCap:"Capacity",tankConc:"Concrete",
+readymixDesc:"Mixer trucks for a concrete volume.",rmVol:"Volume (m³)",rmTruck:"Truck capacity (m³)",rmTotal:"Total with waste",rmTrucks:"Mixer trucks"});
+Object.assign(I18N.el,{
+navSuppliers:"Προμηθευτές",navDashboard:"Πίνακας",navSettings:"Ρυθμίσεις",
+supSub:"Σύγκριση τιμών προμηθευτών ανά υλικό.",supHint:"Τα σύνολα υπολογίζονται από τις ποσότητες του τρέχοντος έργου.",
+addSupplier:"+ Προσθήκη προμηθευτή",useCheapest:"Χρήση φθηνότερων τιμών",
+dashSub:"Τα έργα σου με μια ματιά.",dashCostTitle:"Κόστος ανά έργο",dashTopTitle:"Κορυφαία υλικά ανά κόστος",
+dashProjects:"Έργα",dashValue:"Συνολική αξία",dashItems:"Γραμμές υλικών",
+setSub:"Προεπιλογές και δεδομένα.",setDefTitle:"Προεπιλογές",setDataTitle:"Δεδομένα",
+setDataHint:"Το backup αποθηκεύει τα πάντα (έργα, τιμές, προμηθευτές, ρυθμίσεις) σε ένα αρχείο.",
+unitsL:"Μονάδες",unitsMetric:"Μετρικό",unitsImp:"Αγγλοσαξονικό",
+installApp:"Εγκατάσταση",installHint:"Χρησιμοποίησε το μενού του browser για εγκατάσταση.",
+backupBtn:"Backup",restoreBtn:"Επαναφορά",resetAll:"Διαγραφή όλων",
+notesL:"Σημειώσεις",duplicate:"Διπλασιασμός",copyTag:"αντίγραφο",dlXlsx:"Λήψη Excel",
+scenTitle:"Σενάρια",scenDesc:"Αποθήκευσε την τρέχουσα λίστα για σύγκριση επιλογών.",
+scSave:"Αποθήκευση σεναρίου",scName:"Σενάριο",scItems:"Είδη",
+copyBtn:"Αντιγραφή",closeBtn:"Κλείσιμο",
+cPlaster:"Σοβάς",cScreed:"Τσιμεντοκονία",cStairs:"Σκάλες",cTank:"Δεξαμενή / Πισίνα",cReadymix:"Έτοιμο σκυρόδεμα",
+plasterDesc:"Ξηρό μίγμα σοβά για τοίχους.",plThick:"Πάχος (mm)",plasterVol:"Όγκος σοβά",plasterBags:"Σακιά (25 kg)",
+screedDesc:"Τσιμεντοκονία 1:4 για δάπεδα.",scThick:"Πάχος (mm)",screedVol:"Όγκος κονίας",
+stairsDesc:"Σκυρόδεμα για ευθεία σκάλα.",stSteps:"Σκαλοπάτια",stTread:"Πάτημα (mm)",stRiser:"Ύψος (mm)",stWidth:"Πλάτος (m)",stairsVol:"Όγκος σκυροδέματος",
+tankDesc:"Χωρητικότητα και σκυρόδεμα για ορθογώνιες δεξαμενές.",tkDepth:"Βάθος (m)",tkWall:"Πάχος τοιχώματος (mm)",tankCap:"Χωρητικότητα",tankConc:"Σκυρόδεμα",
+readymixDesc:"Βυτία για όγκο σκυροδέματος.",rmVol:"Όγκος (m³)",rmTruck:"Χωρητικότητα βυτίου (m³)",rmTotal:"Σύνολο με φύρα",rmTrucks:"Βυτία"});
+Object.assign(I18N.de,{
+navSuppliers:"Lieferanten",navDashboard:"Übersicht",navSettings:"Einstellungen",
+supSub:"Lieferantenpreise pro Material vergleichen.",supHint:"Summen basieren auf den Mengen des aktuellen Projekts.",
+addSupplier:"+ Lieferant hinzu",useCheapest:"Günstigste Preise übernehmen",
+dashSub:"Deine Projekte im Überblick.",dashCostTitle:"Kosten pro Projekt",dashTopTitle:"Top-Materialien nach Kosten",
+dashProjects:"Projekte",dashValue:"Gesamtwert",dashItems:"Materialzeilen",
+setSub:"Standards und Daten.",setDefTitle:"Standards",setDataTitle:"Daten",
+setDataHint:"Backup speichert alles (Projekte, Preise, Lieferanten, Einstellungen) in einer Datei.",
+unitsL:"Einheiten",unitsMetric:"Metrisch",unitsImp:"Imperial",
+installApp:"App installieren",installHint:"Über das Browser-Menü installieren.",
+backupBtn:"Backup",restoreBtn:"Wiederherstellen",resetAll:"Alle Daten löschen",
+notesL:"Notizen",duplicate:"Duplizieren",copyTag:"Kopie",dlXlsx:"Excel laden",
+scenTitle:"Szenarien",scenDesc:"Aktuelle Liste als Vergleich speichern.",
+scSave:"Als Szenario speichern",scName:"Szenario",scItems:"Positionen",
+copyBtn:"Kopieren",closeBtn:"Schließen",
+cPlaster:"Putz",cScreed:"Estrich",cStairs:"Treppe",cTank:"Tank / Pool",cReadymix:"Transportbeton",
+plasterDesc:"Trockenputzmischung für Wände.",plThick:"Dicke (mm)",plasterVol:"Putzvolumen",plasterBags:"Säcke (25 kg)",
+screedDesc:"Zementestrich 1:4 für Böden.",scThick:"Dicke (mm)",screedVol:"Estrichvolumen",
+stairsDesc:"Beton für eine gerade Treppe.",stSteps:"Stufen",stTread:"Auftritt (mm)",stRiser:"Steigung (mm)",stWidth:"Breite (m)",stairsVol:"Betonvolumen",
+tankDesc:"Volumen und Beton für rechteckige Tanks.",tkDepth:"Tiefe (m)",tkWall:"Wanddicke (mm)",tankCap:"Volumen",tankConc:"Beton",
+readymixDesc:"Fahrmischer für ein Betonvolumen.",rmVol:"Volumen (m³)",rmTruck:"Mischerkapazität (m³)",rmTotal:"Gesamt mit Verschnitt",rmTrucks:"Fahrmischer"});
+Object.assign(I18N.fr,{
+navSuppliers:"Fournisseurs",navDashboard:"Tableau de bord",navSettings:"Paramètres",
+supSub:"Comparer les prix fournisseurs par matériau.",supHint:"Totaux calculés sur les quantités du projet actuel.",
+addSupplier:"+ Ajouter fournisseur",useCheapest:"Appliquer les prix les moins chers",
+dashSub:"Vos projets en un coup d'œil.",dashCostTitle:"Coût par projet",dashTopTitle:"Matériaux les plus coûteux",
+dashProjects:"Projets",dashValue:"Valeur totale",dashItems:"Lignes",
+setSub:"Valeurs par défaut et données.",setDefTitle:"Valeurs par défaut",setDataTitle:"Données",
+setDataHint:"La sauvegarde enregistre tout (projets, prix, fournisseurs, paramètres) dans un fichier.",
+unitsL:"Unités",unitsMetric:"Métrique",unitsImp:"Impérial",
+installApp:"Installer l'app",installHint:"Utilisez le menu du navigateur pour installer.",
+backupBtn:"Sauvegarde",restoreBtn:"Restaurer",resetAll:"Tout effacer",
+notesL:"Notes",duplicate:"Dupliquer",copyTag:"copie",dlXlsx:"Télécharger Excel",
+scenTitle:"Scénarios",scenDesc:"Enregistrer la liste actuelle pour comparer.",
+scSave:"Enregistrer le scénario",scName:"Scénario",scItems:"Articles",
+copyBtn:"Copier",closeBtn:"Fermer",
+cPlaster:"Enduit",cScreed:"Chape",cStairs:"Escalier",cTank:"Cuve / Piscine",cReadymix:"Béton prêt",
+plasterDesc:"Enduit sec pour murs.",plThick:"Épaisseur (mm)",plasterVol:"Volume d'enduit",plasterBags:"Sacs (25 kg)",
+screedDesc:"Chape ciment 1:4 pour sols.",scThick:"Épaisseur (mm)",screedVol:"Volume de chape",
+stairsDesc:"Béton pour un escalier droit.",stSteps:"Marches",stTread:"Giron (mm)",stRiser:"Contremarche (mm)",stWidth:"Largeur (m)",stairsVol:"Volume de béton",
+tankDesc:"Capacité et béton pour cuves rectangulaires.",tkDepth:"Profondeur (m)",tkWall:"Épaisseur paroi (mm)",tankCap:"Capacité",tankConc:"Béton",
+readymixDesc:"Camions malaxeurs pour un volume de béton.",rmVol:"Volume (m³)",rmTruck:"Capacité malaxeur (m³)",rmTotal:"Total avec pertes",rmTrucks:"Malaxeurs"});
+Object.assign(I18N.es,{
+navSuppliers:"Proveedores",navDashboard:"Panel",navSettings:"Ajustes",
+supSub:"Comparar precios de proveedores por material.",supHint:"Totales calculados con las cantidades del proyecto actual.",
+addSupplier:"+ Añadir proveedor",useCheapest:"Usar precios más baratos",
+dashSub:"Tus proyectos de un vistazo.",dashCostTitle:"Coste por proyecto",dashTopTitle:"Materiales más caros",
+dashProjects:"Proyectos",dashValue:"Valor total",dashItems:"Líneas",
+setSub:"Valores y datos.",setDefTitle:"Valores",setDataTitle:"Datos",
+setDataHint:"La copia guarda todo (proyectos, precios, proveedores, ajustes) en un archivo.",
+unitsL:"Unidades",unitsMetric:"Métrico",unitsImp:"Imperial",
+installApp:"Instalar app",installHint:"Usa el menú del navegador para instalar.",
+backupBtn:"Copia",restoreBtn:"Restaurar",resetAll:"Borrar todo",
+notesL:"Notas",duplicate:"Duplicar",copyTag:"copia",dlXlsx:"Descargar Excel",
+scenTitle:"Escenarios",scenDesc:"Guardar la lista actual para comparar.",
+scSave:"Guardar escenario",scName:"Escenario",scItems:"Artículos",
+copyBtn:"Copiar",closeBtn:"Cerrar",
+cPlaster:"Yeso",cScreed:"Solera",cStairs:"Escalera",cTank:"Depósito / Piscina",cReadymix:"Hormigón preparado",
+plasterDesc:"Mezcla seca de yeso para paredes.",plThick:"Espesor (mm)",plasterVol:"Volumen de yeso",plasterBags:"Sacos (25 kg)",
+screedDesc:"Solera de cemento 1:4 para suelos.",scThick:"Espesor (mm)",screedVol:"Volumen de solera",
+stairsDesc:"Hormigón para escalera recta.",stSteps:"Peldaños",stTread:"Huella (mm)",stRiser:"Contrahuella (mm)",stWidth:"Ancho (m)",stairsVol:"Volumen de hormigón",
+tankDesc:"Capacidad y hormigón para depósitos rectangulares.",tkDepth:"Profundidad (m)",tkWall:"Espesor pared (mm)",tankCap:"Capacidad",tankConc:"Hormigón",
+readymixDesc:"Camiones hormigonera para un volumen.",rmVol:"Volumen (m³)",rmTruck:"Capacidad camión (m³)",rmTotal:"Total con merma",rmTrucks:"Camiones"});
+Object.assign(I18N.it,{
+navSuppliers:"Fornitori",navDashboard:"Cruscotto",navSettings:"Impostazioni",
+supSub:"Confronta i prezzi dei fornitori per materiale.",supHint:"Totali calcolati sulle quantità del progetto corrente.",
+addSupplier:"+ Aggiungi fornitore",useCheapest:"Usa i prezzi più bassi",
+dashSub:"I tuoi progetti a colpo d'occhio.",dashCostTitle:"Costo per progetto",dashTopTitle:"Materiali più costosi",
+dashProjects:"Progetti",dashValue:"Valore totale",dashItems:"Righe",
+setSub:"Predefiniti e dati.",setDefTitle:"Predefiniti",setDataTitle:"Dati",
+setDataHint:"Il backup salva tutto (progetti, prezzi, fornitori, impostazioni) in un file.",
+unitsL:"Unità",unitsMetric:"Metrico",unitsImp:"Imperiale",
+installApp:"Installa app",installHint:"Usa il menu del browser per installare.",
+backupBtn:"Backup",restoreBtn:"Ripristina",resetAll:"Cancella tutto",
+notesL:"Note",duplicate:"Duplica",copyTag:"copia",dlXlsx:"Scarica Excel",
+scenTitle:"Scenari",scenDesc:"Salva la lista corrente per confrontare.",
+scSave:"Salva scenario",scName:"Scenario",scItems:"Voci",
+copyBtn:"Copia",closeBtn:"Chiudi",
+cPlaster:"Intonaco",cScreed:"Massetto",cStairs:"Scale",cTank:"Serbatoio / Piscina",cReadymix:"Calcestruzzo preconfezionato",
+plasterDesc:"Miscela secca per intonaco.",plThick:"Spessore (mm)",plasterVol:"Volume intonaco",plasterBags:"Sacchi (25 kg)",
+screedDesc:"Massetto cementizio 1:4 per pavimenti.",scThick:"Spessore (mm)",screedVol:"Volume massetto",
+stairsDesc:"Calcestruzzo per scala rettilinea.",stSteps:"Gradini",stTread:"Pedata (mm)",stRiser:"Alzata (mm)",stWidth:"Larghezza (m)",stairsVol:"Volume calcestruzzo",
+tankDesc:"Capacità e calcestruzzo per vasche rettangolari.",tkDepth:"Profondità (m)",tkWall:"Spessore parete (mm)",tankCap:"Capacità",tankConc:"Calcestruzzo",
+readymixDesc:"Betoniere per un volume di calcestruzzo.",rmVol:"Volume (m³)",rmTruck:"Capacità betoniera (m³)",rmTotal:"Totale con sfrido",rmTrucks:"Betoniere"});
+Object.assign(I18N.pt,{
+navSuppliers:"Fornecedores",navDashboard:"Painel",navSettings:"Definições",
+supSub:"Comparar preços de fornecedores por material.",supHint:"Totais calculados com as quantidades do projeto atual.",
+addSupplier:"+ Adicionar fornecedor",useCheapest:"Usar preços mais baratos",
+dashSub:"Os teus projetos num relance.",dashCostTitle:"Custo por projeto",dashTopTitle:"Materiais mais caros",
+dashProjects:"Projetos",dashValue:"Valor total",dashItems:"Linhas",
+setSub:"Padrões e dados.",setDefTitle:"Padrões",setDataTitle:"Dados",
+setDataHint:"A cópia guarda tudo (projetos, preços, fornecedores, definições) num ficheiro.",
+unitsL:"Unidades",unitsMetric:"Métrico",unitsImp:"Imperial",
+installApp:"Instalar app",installHint:"Usa o menu do navegador para instalar.",
+backupBtn:"Cópia",restoreBtn:"Restaurar",resetAll:"Apagar tudo",
+notesL:"Notas",duplicate:"Duplicar",copyTag:"cópia",dlXlsx:"Descarregar Excel",
+scenTitle:"Cenários",scenDesc:"Guardar a lista atual para comparar.",
+scSave:"Guardar cenário",scName:"Cenário",scItems:"Itens",
+copyBtn:"Copiar",closeBtn:"Fechar",
+cPlaster:"Reboco",cScreed:"Betonilha",cStairs:"Escadas",cTank:"Depósito / Piscina",cReadymix:"Betão pronto",
+plasterDesc:"Mistura seca de reboco para paredes.",plThick:"Espessura (mm)",plasterVol:"Volume de reboco",plasterBags:"Sacos (25 kg)",
+screedDesc:"Betonilha de cimento 1:4 para pavimentos.",scThick:"Espessura (mm)",screedVol:"Volume de betonilha",
+stairsDesc:"Betão para escada reta.",stSteps:"Degraus",stTread:"Piso (mm)",stRiser:"Espelho (mm)",stWidth:"Largura (m)",stairsVol:"Volume de betão",
+tankDesc:"Capacidade e betão para depósitos retangulares.",tkDepth:"Profundidade (m)",tkWall:"Espessura parede (mm)",tankCap:"Capacidade",tankConc:"Betão",
+readymixDesc:"Camiões betoneira para um volume.",rmVol:"Volume (m³)",rmTruck:"Capacidade camião (m³)",rmTotal:"Total com quebra",rmTrucks:"Camiões"});
+Object.assign(I18N.nl,{
+navSuppliers:"Leveranciers",navDashboard:"Dashboard",navSettings:"Instellingen",
+supSub:"Leveranciersprijzen per materiaal vergelijken.",supHint:"Totalen berekend met de hoeveelheden van het huidige project.",
+addSupplier:"+ Leverancier toevoegen",useCheapest:"Goedkoopste prijzen gebruiken",
+dashSub:"Je projecten in één oogopslag.",dashCostTitle:"Kosten per project",dashTopTitle:"Duurste materialen",
+dashProjects:"Projecten",dashValue:"Totale waarde",dashItems:"Regels",
+setSub:"Standaarden en gegevens.",setDefTitle:"Standaarden",setDataTitle:"Gegevens",
+setDataHint:"Backup slaat alles op (projecten, prijzen, leveranciers, instellingen) in één bestand.",
+unitsL:"Eenheden",unitsMetric:"Metrisch",unitsImp:"Imperiaal",
+installApp:"App installeren",installHint:"Gebruik het browsermenu om te installeren.",
+backupBtn:"Backup",restoreBtn:"Herstellen",resetAll:"Alles wissen",
+notesL:"Notities",duplicate:"Dupliceren",copyTag:"kopie",dlXlsx:"Excel downloaden",
+scenTitle:"Scenario's",scenDesc:"Huidige lijst opslaan om te vergelijken.",
+scSave:"Scenario opslaan",scName:"Scenario",scItems:"Items",
+copyBtn:"Kopiëren",closeBtn:"Sluiten",
+cPlaster:"Stucwerk",cScreed:"Dekvloer",cStairs:"Trap",cTank:"Tank / Zwembad",cReadymix:"Kant-en-klaar beton",
+plasterDesc:"Droge stucmix voor wanden.",plThick:"Dikte (mm)",plasterVol:"Stucvolume",plasterBags:"Zakken (25 kg)",
+screedDesc:"Cementdekvloer 1:4 voor vloeren.",scThick:"Dikte (mm)",screedVol:"Dekvloervolume",
+stairsDesc:"Beton voor een rechte trap.",stSteps:"Treden",stTread:"Aantrede (mm)",stRiser:"Optrede (mm)",stWidth:"Breedte (m)",stairsVol:"Betonvolume",
+tankDesc:"Inhoud en beton voor rechthoekige tanks.",tkDepth:"Diepte (m)",tkWall:"Wanddikte (mm)",tankCap:"Inhoud",tankConc:"Beton",
+readymixDesc:"Mixers voor een betonvolume.",rmVol:"Volume (m³)",rmTruck:"Mixercapaciteit (m³)",rmTotal:"Totaal met verlies",rmTrucks:"Mixers"});
 
 /* ================= init ================= */
 function init(){
@@ -990,27 +1497,14 @@ function init(){
   document.querySelectorAll('#calcTabs button').forEach(b=>b.addEventListener('click',()=>{
     document.querySelectorAll('#calcTabs button').forEach(x=>x.classList.remove('active'));b.classList.add('active');
     document.querySelectorAll('.calc').forEach(c=>c.classList.remove('active'));$('c-'+b.dataset.calc).classList.add('active')}));
-  $('ccGo').onclick=calcConcrete;
-  $('ccAdd').onclick=()=>{if(!CC){toast(t('msgInvalid'));return}addItems([[t('cConcrete'),fmt(CC.vol,2),'m³','concrete_m3'],[t('cementBags'),fmt(CC.bags,1),'pcs','cement_bag'],[t('sandT'),fmt(CC.sandT,2),'t','sand_t'],[t('gravelT'),fmt(CC.gravT,2),'t','gravel_t']])};
-  $('rbAdd').onclick=()=>renderRbRows([...rbRows(),{dia:12,len:100}]);
-  $('rbGo').onclick=calcRebar;
-  $('rbAddP').onclick=()=>{if(!RB){toast(t('msgInvalid'));return}addItems(RB.det.map(d=>['Rebar Φ'+d.d,fmt(d.w,1),'kg','rebar_kg']))};
-  $('wGo').onclick=calcWall;
-  $('wAdd').onclick=()=>{if(!WL){toast(t('msgInvalid'));return}addItems([[(WL.type==='block'?'Blocks':'Bricks'),fmt(WL.units,0),'pcs',WL.type==='block'?'block_pc':'brick_pc'],[t('mortarM3'),fmt(WL.mortar,2),'m³','mortar_m3']])};
-  $('pGo').onclick=calcPaint;
-  $('pAdd').onclick=()=>{if(!PT){toast(t('msgInvalid'));return}addItems([[t('cPaint'),fmt(PT.L,1),'L','paint_l']])};
-  $('tGo').onclick=calcTiles;
-  $('tAdd').onclick=()=>{if(!TL){toast(t('msgInvalid'));return}addItems([[t('cTiles'),fmt(TL.area,1),'m²','tile_m2'],[t('adhesiveKg'),fmt(TL.adh,1),'kg','adhesive_kg']])};
-  $('aGo').onclick=calcAgg;
-  $('aAdd').onclick=()=>{if(!AG){toast(t('msgInvalid'));return}addItems([[AG.name.split(' (')[0],fmt(AG.tonnes,2),'t','agg_t']])};
-  $('lbAdd').onclick=()=>{const tb=$('lbBody');const tr=document.createElement('tr');tr.innerHTML='<td><input type="number" min="0" step="1" value="10" data-f="pcs"></td><td><input type="text" value="50x100" data-f="sec"></td><td><input type="number" min="0" step="any" value="4" data-f="len"></td><td><button class="btn btn-ghost btn-sm" data-del>×</button></td>';tr.querySelector('[data-del]').onclick=()=>tr.remove();tb.appendChild(tr)};
-  $('lbGo').onclick=calcLumber;
-  $('lbAddP').onclick=()=>{if(!LB){toast(t('msgInvalid'));return}addItems([[t('cLumber'),fmt(LB.vol,3),'m³','lumber_m3']])};
+  bindCalcButtons();
   $('pjName').addEventListener('input',e=>{cur().name=e.target.value;persist();renderPjSel()});
-  $('pjCsv').onclick=exportCSV;$('pjQuote').onclick=quotePDF;$('pjShare').onclick=shareLink;
+  $('pjCsv').onclick=exportCSV;
+  $('pjQuote').onclick=quotePDF;
+  $('pjShare').onclick=shareLink;
   $('pjPrint').onclick=()=>window.print();
   $('pjClear').onclick=()=>{if(confirm(t('confirmDelete'))){cur().items=[];persist();renderProject();toast(t('listCleared'))}};
-    $('pjSel').onchange=e=>{S.curPid=e.target.value;persist();renderProject()};
+  $('pjSel').onchange=e=>{S.curPid=e.target.value;persist();renderProject()};
   $('pjNew').onclick=()=>{S.projects.push({id:uid(),name:'Project '+S.projects.length,date:new Date().toISOString(),items:[]});S.curPid=S.projects[S.projects.length-1].id;persist();renderProject()};
   $('pjDel').onclick=()=>{if(S.projects.length<=1){toast(t('msgInvalid'));return}if(confirm(t('confirmDelete'))){S.projects=S.projects.filter(x=>x.id!==S.curPid);S.curPid=S.projects[0].id;persist();renderProject()}};
   $('pjCur').onchange=e=>{S.currency=e.target.value;persist();updateTotals()};
@@ -1019,13 +1513,26 @@ function init(){
   $('coClient').addEventListener('input',e=>{S.company.client=e.target.value;persist()});
   $('coLogo').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{S.company.logo=rd.result;persist();toast(t('msgExported'))};rd.readAsDataURL(f)});
   $('darkBtn').onclick=()=>setDark(!S.dark);
-  $('exGo').onclick=calcExc;$('exAdd').onclick=()=>{if(!EX){toast(t('msgInvalid'));return}addItems([[t('cExcav')+' ('+t('looseVol')+')',fmt(EX.loose,2),'m³','exc_m3']])};
-  $('bmAddRow').onclick=addBmRow;$('bmGo').onclick=calcBeams;
-  $('bmAddP').onclick=()=>{if(!BM){toast(t('msgInvalid'));return}addItems(BM.det.map(d=>['Steel '+d.p,fmt(d.w,1),'kg','steel_kg']))};
-  $('dwGo').onclick=calcDrywall;$('dwAdd').onclick=()=>{if(!DW){toast(t('msgInvalid'));return}addItems([[t('dwBoards'),fmt(DW.boards,0),'pcs','dw_board'],[t('dwCompound'),fmt(DW.compound,1),'kg','compound_kg']])};
-  $('inGo').onclick=calcInsul;$('inAdd').onclick=()=>{if(!IN2){toast(t('msgInvalid'));return}addItems([[t('cInsul')+' '+num($('inThick').value)+'mm',fmt(IN2.area,1),'m²','ins_m2']])};
-  $('rfGo').onclick=calcRoof;$('rfAdd').onclick=()=>{if(!RF){toast(t('msgInvalid'));return}addItems([[RF.type==='tiles'?t('rfTilesN'):t('rfSheetsN'),fmt(RF.n,0),'pcs',RF.type==='tiles'?'roof_tile':'roof_sheet']])};
-  $('feGo').onclick=calcFence;$('feAdd').onclick=()=>{if(!FE){toast(t('msgInvalid'));return}addItems([[t('fencePosts'),fmt(FE.posts,0),'pcs','post_pc'],[t('meshRolls'),fmt(FE.rolls,0),'roll','mesh_roll']])};
+  $('unitBtn').onclick=()=>setUnits(S.units==='imp'?'metric':'imp');
+  $('setCur').value=S.currency||'€';$('setMargin').value=S.margin||0;$('setUnits').value=S.units||'metric';
+  $('setCur').onchange=e=>{S.currency=e.target.value;persist();updateTotals()};
+  $('setMargin').addEventListener('input',e=>{S.margin=num(e.target.value);persist();updateTotals()});
+  $('setUnits').onchange=e=>setUnits(e.target.value);
+  $('setInstall').onclick=installApp;
+  $('setBackup').onclick=backupAll;
+  $('setRestoreBtn').onclick=()=>$('setRestore').click();
+  $('setRestore').addEventListener('change',e=>{restoreAll(e.target.files[0]);e.target.value=''});
+  $('setReset').onclick=()=>{if(confirm(t('confirmDelete'))){try{localStorage.removeItem(LS_KEY)}catch(e){} location.reload()}};
+  $('pjDup').onclick=duplicateProject;
+  $('pjNotes').addEventListener('input',e=>{cur().notes=e.target.value;persist()});
+  $('pjXlsx').onclick=exportXLSX;
+  $('scSave').onclick=()=>{const p=cur();if(!p.items.length){toast(t('listEmpty'));return}
+    S.scenarios.push({id:uid(),name:(p.name||'Project')+' #'+(S.scenarios.length+1),items:JSON.parse(JSON.stringify(p.items)),total:p.items.reduce((a,it)=>a+it.qty*it.price,0)});persist();renderScenarios();toast(t('msgExported'))};
+  $('supAdd').onclick=()=>{supInit();S.suppliers.names.push('Supplier '+String.fromCharCode(65+S.suppliers.names.length));persist();renderSuppliers()};
+  $('supCheap').onclick=useCheapest;
+  $('shareCopy').onclick=()=>{const u=$('shareUrl').value;if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(()=>toast(t('linkCopied')));else{$('shareUrl').select()}};
+  $('shareClose').onclick=()=>{$('shareModal').style.display='none'};
+  regSW();
   $('notifyBtn').onclick=()=>toast(t('msgNotifyThanks'));
 }
 document.addEventListener('DOMContentLoaded',init);
